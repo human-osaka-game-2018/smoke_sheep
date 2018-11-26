@@ -1,8 +1,9 @@
 #include"player.h"
+#include"Enemy.h"
+#include"map.h"
 #include"Main.h"
-#define MAP_HEIGHT 12
-#define MAP_WIDTH 130
-#define GRAVITY 9.8
+#include"render.h"
+
 
 //Directx関係----------------------------
 LPDIRECT3DTEXTURE9	  g_pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
@@ -16,24 +17,21 @@ HRESULT InitD3d(HWND);
 HRESULT InitDinput(HWND);
 LPD3DXFONT MainFont;
 
-CUSTOMVERTEX map_tip[] =
+
+CUSTOMVERTEX background[4]
 {
-	{ 0.0f,  0.0f,  0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
-{ 64.0f, 0.0f,  0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
-{ 64.0f, 64.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
-{ 0.0f,  64.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
+{ 0.f  ,0.f  ,1.f ,1.f, 0xFFFFFFFF,0.f  ,0.f },
+{ WIDTH,0.f  ,1.f ,1.f, 0xFFFFFFFF,1.f,0.f },
+{ WIDTH,HIGHT,1.f ,1.f, 0xFFFFFFFF,1.f,1.f },
+{ 0.f  ,HIGHT,1.f ,1.f, 0xFFFFFFFF,0.f  ,1.f },
 };
 
 
-CUSTOMVERTEX enemy[] =
-{
-	{ 0.0f,  0.0f,  0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 0.0f },
-{ 64.0f, 0.0f,  0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 0.0f },
-{ 64.0f, 64.0f, 0.5f, 1.0f, 0xFFFFFFFF, 1.0f, 1.0f },
-{ 0.0f,  64.0f, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f, 1.0f },
-};
+
+
 
 int map_error = 0;
+int number = 0;
 int map[MAP_HEIGHT][MAP_WIDTH];
 bool isRight = false;
 bool isLeft = false;
@@ -41,59 +39,9 @@ bool jflag = false;
 unsigned int game_time = 0;
 bool key_space = false;
 bool smoke = false;
-
-void Tex_Set(IDirect3DDevice9* pD3Device, LPDIRECT3DTEXTURE9 pTexture)
-{
-	pD3Device->SetTexture(0, pTexture);
-}
-void Tex_Set_Draw(IDirect3DDevice9* pD3Device, LPDIRECT3DTEXTURE9 pTexture, CUSTOMVERTEX* Vertex)
-{
-	Tex_Set(pD3Device, pTexture);
-
-	pD3Device->DrawPrimitiveUP(
-		D3DPT_TRIANGLEFAN,
-		2,
-		Vertex,
-		sizeof(CUSTOMVERTEX));
-}
-int Map_Hit(int x, int y)
-{
-	int map_x = x / 64;
-	int map_y = y / 64;
-	if (map_y < 0)
-	{
-		map_y = 0;
-	}
-  	if (map[map_y][map_x] ==1 )
-	{
-		return 1;
-	}
-	if (map[map_y][map_x] == 2)
-	{
-		return 2;
-	}
-	if (map[map_y][map_x] == 3)
-	{
-		return 3;
-	}
-	return 0;
-}
-
-void Map_Search(int x, int y, int* px, int* py)
-{
-	int map_x = x / 64;
-	int map_y = y / 64;
-	if (x % 64 != 0)
-	{
-		x++;
-	}
-	if (y % 64 != 0)
-	{
-		y++;
-	}
-	*px = map_x;
-	*py = map_y;
-}
+bool smokeUPmove = false;
+bool smokeDOWNmove = false;
+bool a[100];//仮：エネミーの左右動作情報
 
 
 
@@ -110,7 +58,9 @@ void MainKeyControl()
 
 		if (diks[DIK_H] & 0x80)
 		{
-			
+			smoke = true;
+			jflag = false;
+
 		}
 
 		if (diks[DIK_A] & 0x80)
@@ -129,13 +79,16 @@ void MainKeyControl()
 		{
 			isRight = false;
 		}
-		if (diks[DIK_UP] & 0x80)
+		if (diks[DIK_S] & 0x80&&smoke==true)
 		{
+		smokeDOWNmove= true;
 		}
-		if (diks[DIK_DOWN] & 0x80)
+		else
 		{
+			smokeDOWNmove = false;
 		}
-		if (diks[DIK_W] & 0x80 && count > 10)
+		
+		if (diks[DIK_W] & 0x80 && count > 10&&smoke==false)
 		{
 			
 			key_space = true;
@@ -144,110 +97,108 @@ void MainKeyControl()
 		else {
 			key_space = false;
 		}
+
+		if (diks[DIK_W] & 0x80 && smoke==true)
+		{
+			smokeUPmove=true;
+		}
+		else {
+			smokeUPmove = false;
+		}
+		if (diks[DIK_SPACE] & 0x80)
+		{
+			Sheep.x_speed = 10;
+		}
 	}
 }
 
-void mapRender()
-{
-	static bool CsvReading = true;
-	if (CsvReading == true)
-	{
-		FILE*  fp;
-		fopen_s(&fp, "map.csv", "r");
-		for (int i = 0; i < MAP_HEIGHT; i++)
-		{
-			for (int j = 0; j < MAP_WIDTH; j++)
-			{
-				fscanf_s(fp, "%d,", &map[i][j], _countof(map));
-			}
-		}
-		CsvReading = false;
-	}
-
-		/*マップの描画処理*/
-		CUSTOMVERTEX tmp_map1[4];
-		CUSTOMVERTEX enemy[4];
-		for (int y = 0; y < MAP_HEIGHT; y++)
-		{
-			for (int x = 0; x < MAP_WIDTH; x++)
-			{
-
-				for (int i = 0; i < 4; i++)
-				{
-					tmp_map1[i] = map_tip[i];
-					
-				}
-
-				for (int i = 0; i < 4; i++)
-				{
-					tmp_map1[i].x += (x * 64);
-					tmp_map1[i].y += (y * 64);
 
 
-				}
-				if (map[y][x] == 1)
-				{
-					Tex_Set_Draw(g_pD3Device, g_pTexture[M_01_01_TEX], tmp_map1);
-				}
-				if (map[y][x] == 2)
-				{
 
-					for (int i = 0; i < 4; i++)
-					{
-						enemy[i] = tmp_map1[i];
-						
-					}
-					Tex_Set_Draw(g_pD3Device, g_pTexture[Fire_TEX], enemy);
-
-				}
-				if (map[y][x] == 3)
-				{
-					Tex_Set_Draw(g_pD3Device, g_pTexture[Wataame_TEX], tmp_map1);
-
-				}
-			}
-		}
-}
 void scroll() {
 	//スクロール
-	if (player_chara[1].x > 568 && map_error > -2880)
+	if (player_chara[1].x > 568 /*&& map_error > -2880*/)
 	{
 		for (int i = 0; i < 4; i++)
 		{
-			map_tip[i].x -= 5;
- 			player_chara[i].x -= 5;
+			map_tip[i].x -= Sheep.x_speed;
+ 			player_chara[i].x -= Sheep.x_speed;
+			background[i].tu += 0.002f;
+			for (int j = 0; j < number; j++) {
+				enemy[j][i].x -= Sheep.x_speed;
+			}
 		}
-		map_error -= 5;
+		map_error -= Sheep.x_speed;
 
 	}
 	else if (player_chara[0].x < 440 && map_error < 0)
 	{
 		for (int i = 0; i < 4; i++)
 		{
-			map_tip[i].x += 5;
-			player_chara[i].x += 5;
+			map_tip[i].x += Sheep.x_speed;
+			player_chara[i].x += Sheep.x_speed;
+			background[i].tu -= 0.002f;
+
+			for (int j = 0; j < number; j++) {
+				enemy[j][i].x += Sheep.x_speed;
+			}
 		}
-		map_error += 5;
+		map_error += Sheep.x_speed;
 	}
 }
 
 
+
+void enemymove()
+{
+	for (int i = 0; i < number; i++)
+	{
+		if (Map_Hit(int(enemy[i][2].x - map_error), int(enemy[i][2].y-GRAVITY)) == 1 || Map_Hit(int(enemy[i][1].x - map_error), int(enemy[i][1].y + GRAVITY)) == 1)
+		{
+			a[i] = false;
+		}
+
+		if (Map_Hit(int(enemy[i][2].x - map_error), int(enemy[i][2].y - GRAVITY)) == 5 || Map_Hit(int(enemy[i][1].x - map_error), int(enemy[i][1].y + GRAVITY)) == 5)
+		{
+			a[i] = false; 
+		}
+
+		if (Map_Hit(int(enemy[i][0].x - map_error), int(enemy[i][0].y + GRAVITY)) == 1 || Map_Hit(int(enemy[i][3].x - map_error), int(enemy[i][3].y - GRAVITY)) == 1)
+		{
+			a[i] = true;
+		}
+
+		if (Map_Hit(int(enemy[i][0].x - map_error), int(enemy[i][0].y+ GRAVITY)) == 5 || Map_Hit(int(enemy[i][3].x - map_error), int(enemy[i][3].y - GRAVITY)) == 5)
+		{
+			a[i] = true;
+		}
+	}
+
+
+}
 
 void move() {
-	
-	for (int y = 0; y < MAP_HEIGHT; y++)
+	enemymove();
+	for (int j = 0; j < number; j++)
 	{
-		for (int x = 0; x < MAP_WIDTH; x++)
-		{
-		/*	if (Map_Hit(int(enemy[2].x - map_error), int(enemy[2].y)) != 1 && Map_Hit(int(enemy[1].x - map_error), int(enemy[1].y)) != 1)
-			{*/
-			
-						for (int i = 0; i < 4; i++)
-						{
-							enemy[i].x += 5;//PlayerのSpeed
-						}
-					}
+		
+
+		if (a[j] == true) {
+			for (int i = 0; i < 4; i++)
+			{
+				enemy[j][i].x += 2;//enemyのSpeed
+			}
+		}
+
+		if (a[j] == false) {
+
+			for (int i = 0; i < 4; i++)
+			{
+				enemy[j][i].x -= 2;//enemyのSpeed
+			}
+		}
 	}
+
 }
 
 
@@ -255,78 +206,49 @@ void move() {
 
 
 
-
-
-
-
-void Render()
-{
-	//頂点情報を入れる--------------------------------------
-
-	CUSTOMVERTEX background[4]
-	{
-		{ 0.f  ,0.f  ,1.f ,1.f, 0xFFFFFFFF, 0.f,0.f },
-	{ WIDTH,0.f  ,1.f ,1.f, 0xFFFFFFFF, 1.f, 0.f },
-	{ WIDTH,HIGHT,1.f ,1.f, 0xFFFFFFFF, 1.f,  1.f },
-	{ 0.f  ,HIGHT,1.f ,1.f, 0xFFFFFFFF, 0.f, 1.f },
-	};
-
-
-	//画面の消去
-	g_pD3Device->Clear(0, NULL,
-		D3DCLEAR_TARGET,
-		D3DCOLOR_XRGB(0x00, 0x00, 0x00),
-		1.0, 0);
-	//描画の開始
-	g_pD3Device->BeginScene();
-
-	Tex_Set_Draw(g_pD3Device, g_pTexture[C_01_01_TEX], player_chara);
-
-	mapRender();
-
-	//描画の終了
-	g_pD3Device->EndScene();
-
-	//表示
-	g_pD3Device->Present(NULL, NULL, NULL, NULL);
-}
 
 
 
 void Gravity(){
-	
-		//右下と右上の当たり判定
-		if (Map_Hit(int(player_chara[2].x  - map_error), int(player_chara[2].y)) !=1 )
+	if (smoke == false)
+	{
+		//右下の当たり判定
+		if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y)) != 1)
 		{
-			//下と右の当たり判定
- 			if (Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y)) !=1 )
+			//下の当たり判定
+			if (Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y)) != 1)
 			{
-				//左下と左上の当たり判定
-				if ( Map_Hit(int(player_chara[3].x  - map_error), int(player_chara[3].y)) !=1)
+				//左下の当たり判定
+				if (Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y)) != 1)
 				{
-					////左と上の当たり判定
-					//if (Map_Hit(int(player_chara[0].x + 64 - map_error), int(player_chara[0].y)) !=1 && Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y - 64)) !=1)
-					//{
-						for (int i = 0; i < 4; i++)
-						{
-							player_chara[i].y += 5;
-						}
-					/*}*/
+
+					for (int i = 0; i < 4; i++)
+					{
+						player_chara[i].y += GRAVITY;
+					}
 				}
-			}	
-}
-	if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y)) == 1 && Map_Hit(int(player_chara[1].x - map_error), int(player_chara[1].y+100)) == 1&& Map_Hit(int(player_chara[2].x -64 -map_error), int(player_chara[2].y )) != 1)
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			player_chara[i].y += 5;
+			}
 		}
+	
 	}
-	if (Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y)) == 1 && Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y + 100)) == 1 && Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y)) != 1)
-	{
-		for (int i = 0; i < 4; i++)
+
+	//右下の当たり判定
+	for (int j = 0; j < number; j++) {
+		if (Map_Hit(int(enemy[j][2].x - map_error), int(enemy[j][2].y)) != 1)
 		{
-			player_chara[i].y += 5;
+			//下の当たり判定
+			if (Map_Hit(int(enemy[j][2].x - 64 - map_error), int(enemy[j][2].y)) != 1)
+			{
+				//左下の当たり判定
+				if (Map_Hit(int(enemy[j][3].x - map_error), int(enemy[j][3].y)) != 1)
+				{
+
+					for (int i = 0; i < 4; i++)
+					{
+						enemy[j][i].y += GRAVITY;
+					}
+				}
+			}
 		}
 	}
 }
@@ -335,25 +257,55 @@ void Gravity(){
 //
 //めり込みバグの修正
 void bug() {
-	
-	while (Map_Hit(int(player_chara[3].x+6  - map_error), int(player_chara[3].y-1)) == 1 || Map_Hit(int(player_chara[2].x-6  - map_error), int(player_chara[2].y-1)) == 1 || Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y-1)) == 1)
+
+	while (Map_Hit(int(player_chara[3].x + 1 + Sheep.x_speed - map_error), int(player_chara[3].y - 1)) == 1 || Map_Hit(int(player_chara[2].x - 1 - Sheep.x_speed - map_error), int(player_chara[2].y - 1)) == 1 || Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y - 1)) == 1)
 	{
 		for (int i = 0; i < 4; i++) {
 			player_chara[i].y -= 0.1f;
 		}
 	}
-	/*while (Map_Hit(int(player_chara[3].x +1 - map_error), int(player_chara[3].y)) == 1 || Map_Hit(int(player_chara[3].x  - map_error), int(player_chara[3].y - 55)) == 1 || Map_Hit(int(player_chara[0].x + 1 - map_error), int(player_chara[0].y)) == 1)
+	while (Map_Hit(int(player_chara[3].x + 1 - map_error), int(player_chara[3].y - Sheep.scale)) == 1)
 	{
 		for (int i = 0; i < 4; i++) {
 			player_chara[i].x += 0.1f;
 		}
 	}
-	while (Map_Hit(int(player_chara[2].x -1 - map_error), int(player_chara[2].y)) == 1 || Map_Hit(int(player_chara[1].x  - map_error), int(player_chara[1].y + 55)) == 1 + 55 || Map_Hit(int(player_chara[1].x + 1 - map_error), int(player_chara[1].y)) == 1)
+	while (Map_Hit(int(player_chara[2].x - 1 - map_error), int(player_chara[2].y - Sheep.scale)) == 1)
 	{
 		for (int i = 0; i < 4; i++) {
 			player_chara[i].x -= 0.1f;
 		}
-	}*/
+	}
+	for (int j = 0; j < number; j++)
+	{
+		while (Map_Hit(int(enemy[j][3].x + 1 + 2- map_error), int(enemy[j][3].y -1)) == 1 || Map_Hit(int(enemy[j][2].x - 1 -2 - map_error), int(enemy[j][2].y -1)) == 1)
+		{
+			for (int i = 0; i < 4; i++) {
+				enemy[j][i].y -= 0.1f;
+			}
+		}
+	}
+
+
+
+
+
+}
+
+void smoketime() {
+	if (smoke == true)
+	{
+	
+		static int smokecount = 0;
+		smokecount++;
+
+		if (smokecount > 60*Sheep.smoketime) {
+			smokecount = 0;
+			smoke = false;
+		}
+	}
+	
+		
 }
 
 
@@ -372,14 +324,14 @@ void jump() {
 
 				p_y2[i] = p_y1[i];
 			}
-			if (Map_Hit(int(player_chara[1].x - 6 - map_error), int(player_chara[1].y)) == 1 || Map_Hit(int(player_chara[0].x + 6 - map_error), int(player_chara[0].y)) == 1 || Map_Hit(int(player_chara[1].x - 64 - map_error), int(player_chara[1].y)) == 1)
+			if (Map_Hit(int(player_chara[1].x -1-Sheep.x_speed - map_error), int(player_chara[1].y)) == 1 || Map_Hit(int(player_chara[0].x + 1 + Sheep.x_speed - map_error), int(player_chara[0].y)) == 1 || Map_Hit(int(player_chara[1].x - 64 - map_error), int(player_chara[1].y)) == 1)
 			{
 				for (int i = 0; i < 4; i++)
 				{
 					player_chara[i].y += 18;
 				}
 			}
-			if (Map_Hit(int(player_chara[2].x -6-map_error), int(player_chara[2].y))==1||  Map_Hit(int(player_chara[3].x +6-map_error), int(player_chara[3].y)) == 1|| Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y)) == 1)
+			if (Map_Hit(int(player_chara[2].x - 1 - Sheep.x_speed -map_error), int(player_chara[2].y))==1||  Map_Hit(int(player_chara[3].x + 1 + Sheep.x_speed -map_error), int(player_chara[3].y)) == 1|| Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y)) == 1)
 			
 			{
 					jflag = false;
@@ -400,6 +352,25 @@ void jump() {
 
 void MainControl()
 {
+	if (smokeUPmove == true)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			player_chara[i].y -= 3;
+		}
+	}
+	if (smokeDOWNmove == true)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			player_chara[i].y += 3;
+		}
+	}
+
+
+
+
+
 	if (isRight == true)
 	{
 		game_time++;
@@ -418,17 +389,37 @@ void MainControl()
 		//右上と右下のあたり判定
 		if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y-6 )) != 1 && Map_Hit(int(player_chara[1].x - map_error), int(player_chara[1].y)) !=1&& Map_Hit(int(player_chara[1].x - map_error), int(player_chara[1].y+55)) != 1)
 		{
-	
-			for (int i = 0; i < 4; i++)
+			if (smoke == false)
 			{
-				player_chara[i].x += 5;//PlayerのSpeed
-				
-				
-				if (game_time % 4 == 0)
+				if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y - 6)) != 5 && Map_Hit(int(player_chara[5].x - map_error), int(player_chara[5].y)) != 5 && Map_Hit(int(player_chara[5].x - map_error), int(player_chara[5].y + 55)) != 5)
 				{
-					player_chara[i].tu += 0.125f;
+
+					for (int i = 0; i < 4; i++)
+					{
+						player_chara[i].x += Sheep.x_speed;//PlayerのSpeed
+
+
+						if (game_time % 4 == 0)
+						{
+							player_chara[i].tu += 0.125f;
+						}
+					}
 				}
 			}
+			else
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					player_chara[i].x += Sheep.x_speed;//PlayerのSpeed
+
+
+					if (game_time % 4 == 0)
+					{
+						player_chara[i].tu += 0.125f;
+					}
+				}
+			}
+
 		}
 		if (player_chara[0].tu == 0.75f)
 		{
@@ -453,17 +444,37 @@ void MainControl()
 			player_chara[2].tu = player_chara[3].tu;
 			player_chara[3].tu = tmp_tu;
 		}
-		if (Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y)) !=1 && Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y - 20)) !=1 &&Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y + 55)) != 1)
+		if (Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y)) != 1 && Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y - 20)) != 1 && Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y + 55)) != 1)
 		{
-			for (int i = 0; i < 4; i++)
-			{
-				player_chara[i].x -= 5; //PlayerのSpeed
-				
-				if (game_time % 4 == 0)
+			if (smoke == false) {
+				if (Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y)) != 5 && Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y - 20)) != 5 && Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y + 55)) != 5)
 				{
-					player_chara[i].tu += 0.125f;
+
+					for (int i = 0; i < 4; i++)
+					{
+						player_chara[i].x -= Sheep.x_speed; //PlayerのSpeed
+
+						if (game_time % 4 == 0)
+						{
+							player_chara[i].tu += 0.125f;
+						}
+					}
 				}
 			}
+			else
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					player_chara[i].x -= Sheep.x_speed; //PlayerのSpeed
+
+					if (game_time % 4 == 0)
+					{
+						player_chara[i].tu += 0.125f;
+					}
+				}
+			}
+		
+			
 		}
 		if (player_chara[1].tu == 0.75f)
 		{
@@ -613,22 +624,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	g_pD3Device->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
 	//頂点に入れるデータを設定
 	g_pD3Device->SetFVF(D3DFVF_CUSTOMVERTEX);
-	D3DXCreateTextureFromFile(
-		g_pD3Device,
-		"text/M_01_01.png",
-		&g_pTexture[M_01_01_TEX]);
-	D3DXCreateTextureFromFile(
-		g_pD3Device,
-		"text/C_01_01.png",
-		&g_pTexture[C_01_01_TEX]);
-	D3DXCreateTextureFromFile(
-		g_pD3Device,
-		"text/fire.png",
-		&g_pTexture[Fire_TEX]);
-	D3DXCreateTextureFromFile(
-		g_pD3Device,
-		"text/wataame.png",
-		&g_pTexture[Wataame_TEX]);
+
+	TEX_Init();
+
+
 	//フォントオブジェクトの作成
 	D3DXCreateFont(
 		g_pD3Device,				// Direct3Dデバイス
@@ -666,10 +665,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 						Gravity();
 					}
 					jump();
+				
 				scroll();
 					MainControl();
 					bug();
 					move();
+					smoketime();
 					SyncOld = SyncNow;
 			}
 		}
