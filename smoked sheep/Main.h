@@ -29,32 +29,25 @@ struct CUSTOMVERTEX
 	DWORD	color;
 	FLOAT	tu, tv;
 };
-
-enum TEXTURE
-{
-	M_01_01_TEX,
-	C_01_01_TEX,
-	Fire_TEX,
-	Wataame_TEX,
-	SmokeS_Smoke_TEX,
-	iveblock_TEX,
-	BACKGROUND_TEX,
-	TEXMAX,
-
-};
-
-struct center
-{
-	float x, y, scale;
-};
-
 enum Scene
 {
 
 aaa,
 };
+enum TEXTURE
+{
 
-extern CUSTOMVERTEX map_tip[4];
+	M_01_01_TEX,
+	C_01_01_TEX,
+	Fire_TEX,
+	Wataame_TEX,
+	Smoke_Smoke_TEX,
+	iveblock_TEX,
+	BACKGROUND_TEX,
+	ENEMY_TEX,
+	TEXMAX,
+
+};
 extern CUSTOMVERTEX background[4];
 extern LPDIRECT3DTEXTURE9	  g_pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
 extern IDirect3DDevice9*	  g_pD3Device;		//	Direct3Dのデバイス
@@ -66,21 +59,15 @@ extern LPDIRECTINPUTDEVICE8 pKeyDevice;
 extern HRESULT InitD3d(HWND);
 extern HRESULT InitDinput(HWND);
 extern LPD3DXFONT MainFont;
-
 extern int map_error ;
-extern int number;
+extern int enemy_number;
 extern int map[MAP_HEIGHT][MAP_WIDTH];
-extern bool isRight;
-extern bool isLeft;
+extern bool isjump;
 extern bool jflag ;
-extern unsigned int game_time;
-extern bool key_space;
-extern bool smoke ;
-extern bool smokeUPmove ;
-extern bool smokeDOWNmove ;
-
-
-
+extern bool smokehensinnow;
+extern bool smoke;
+extern bool a[100];
+extern bool smokereturnnomal;
 void Render();
 void mapRender();
 void MainKeyControl();

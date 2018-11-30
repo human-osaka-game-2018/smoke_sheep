@@ -26,22 +26,15 @@ CUSTOMVERTEX background[4]
 { 0.f  ,HIGHT,1.f ,1.f, 0xFFFFFFFF,0.f  ,1.f },
 };
 
-
-
-
-
 int map_error = 0;
-int number = 0;
+int enemy_number = 0;
 int map[MAP_HEIGHT][MAP_WIDTH];
-bool isRight = false;
-bool isLeft = false;
-bool jflag = false;
-unsigned int game_time = 0;
-bool key_space = false;
-bool smoke = false;
-bool smokeUPmove = false;
-bool smokeDOWNmove = false;
+bool smokehensinnow = false;
+bool isJump = false;//ジャンプキーが押されたか否か
+bool jflag = false;//ジャンプ中か否か
+bool smoke = false;//煙状態か普通状態か
 bool a[100];//仮：エネミーの左右動作情報
+bool smokereturnnomal = false;
 
 
 
@@ -55,65 +48,63 @@ void MainKeyControl()
 	{
 		BYTE diks[256];
 		pKeyDevice->GetDeviceState(sizeof(diks), &diks);
-
 		if (diks[DIK_H] & 0x80)
 		{
-			smoke = true;
+			if (smoke == false)
+			{
+				smokehensinnow = true;
+			}
+			//smoke = true;
 			jflag = false;
-
 		}
-
-		if (diks[DIK_A] & 0x80)
+		if (diks[DIK_A] & 0x80&& (diks[DIK_D] & 0x80)==false)
 		{
-			isLeft = true;
+			PlayerLeft();
 		}
-		else
+		else if (diks[DIK_D] & 0x80 && (diks[DIK_A] & 0x80) == false)
 		{
-			isLeft = false;
+			PlayerRight();
 		}
-		if (diks[DIK_D] & 0x80)
+		else if(smoke)
 		{
-			isRight = true;
+			SettingPlayer_tutv(tu_smokewait, tv_smokewait);
+			for (int i = 0; i < 4; i++)
+			{
+				{
+					player_chara[i].tu += Player_tu(tu_smokewait);
+				}
+			}
+			if (player_chara[0].tu == Player_tu(tu_smokewait) * 2)
+			{
+				SettingPlayer_tu(tu_smokewait);
+			}
 		}
-		else
+		if (diks[DIK_S] & 0x80)
 		{
-			isRight = false;
+			PlayerDown();
 		}
-		if (diks[DIK_S] & 0x80&&smoke==true)
+		if (diks[DIK_W] & 0x80 && count > 10&&!smoke)
 		{
-		smokeDOWNmove= true;
-		}
-		else
-		{
-			smokeDOWNmove = false;
-		}
-		
-		if (diks[DIK_W] & 0x80 && count > 10&&smoke==false)
-		{
-			
-			key_space = true;
+			isJump = true;
 			count = 0;
 		}
 		else {
-			key_space = false;
+			isJump = false;
 		}
-
-		if (diks[DIK_W] & 0x80 && smoke==true)
+		if (diks[DIK_W] & 0x80 )
 		{
-			smokeUPmove=true;
-		}
-		else {
-			smokeUPmove = false;
+			PlayerUp();
 		}
 		if (diks[DIK_SPACE] & 0x80)
 		{
-			Sheep.x_speed = 10;
+			Sheep.x_speed = 7;
+		}
+		else
+		{
+			Sheep.x_speed = 5;
 		}
 	}
 }
-
-
-
 
 void scroll() {
 	//スクロール
@@ -124,12 +115,11 @@ void scroll() {
 			map_tip[i].x -= Sheep.x_speed;
  			player_chara[i].x -= Sheep.x_speed;
 			background[i].tu += 0.002f;
-			for (int j = 0; j < number; j++) {
+			for (int j = 0; j < enemy_number; j++) {
 				enemy[j][i].x -= Sheep.x_speed;
 			}
 		}
 		map_error -= Sheep.x_speed;
-
 	}
 	else if (player_chara[0].x < 440 && map_error < 0)
 	{
@@ -139,7 +129,7 @@ void scroll() {
 			player_chara[i].x += Sheep.x_speed;
 			background[i].tu -= 0.002f;
 
-			for (int j = 0; j < number; j++) {
+			for (int j = 0; j < enemy_number; j++) {
 				enemy[j][i].x += Sheep.x_speed;
 			}
 		}
@@ -149,105 +139,34 @@ void scroll() {
 
 
 
-void enemymove()
-{
-	for (int i = 0; i < number; i++)
-	{
-		if (Map_Hit(int(enemy[i][2].x - map_error), int(enemy[i][2].y-GRAVITY)) == 1 || Map_Hit(int(enemy[i][1].x - map_error), int(enemy[i][1].y + GRAVITY)) == 1)
-		{
-			a[i] = false;
-		}
-
-		if (Map_Hit(int(enemy[i][2].x - map_error), int(enemy[i][2].y - GRAVITY)) == 5 || Map_Hit(int(enemy[i][1].x - map_error), int(enemy[i][1].y + GRAVITY)) == 5)
-		{
-			a[i] = false; 
-		}
-
-		if (Map_Hit(int(enemy[i][0].x - map_error), int(enemy[i][0].y + GRAVITY)) == 1 || Map_Hit(int(enemy[i][3].x - map_error), int(enemy[i][3].y - GRAVITY)) == 1)
-		{
-			a[i] = true;
-		}
-
-		if (Map_Hit(int(enemy[i][0].x - map_error), int(enemy[i][0].y+ GRAVITY)) == 5 || Map_Hit(int(enemy[i][3].x - map_error), int(enemy[i][3].y - GRAVITY)) == 5)
-		{
-			a[i] = true;
-		}
-	}
-
-
-}
-
-void move() {
-	enemymove();
-	for (int j = 0; j < number; j++)
-	{
-		
-
-		if (a[j] == true) {
-			for (int i = 0; i < 4; i++)
-			{
-				enemy[j][i].x += 2;//enemyのSpeed
-			}
-		}
-
-		if (a[j] == false) {
-
-			for (int i = 0; i < 4; i++)
-			{
-				enemy[j][i].x -= 2;//enemyのSpeed
-			}
-		}
-	}
-
-}
-
-
-
-
-
-
-
-
 
 void Gravity(){
-	if (smoke == false)
-	{
-		//右下の当たり判定
-		if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y)) != 1)
+	//プレイヤーの重力判定
+	if (jflag == false) {
+		if (smoke == false)
 		{
-			//下の当たり判定
-			if (Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y)) != 1)
+			//右下・下・左下の当たり判定
+			if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y)) != 1 &&
+				Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y)) != 1 &&
+				Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y)) != 1)
 			{
-				//左下の当たり判定
-				if (Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y)) != 1)
+				for (int i = 0; i < 4; i++)
 				{
-
-					for (int i = 0; i < 4; i++)
-					{
-						player_chara[i].y += GRAVITY;
-					}
+					player_chara[i].y += GRAVITY;
 				}
 			}
 		}
-	
 	}
-
-	//右下の当たり判定
-	for (int j = 0; j < number; j++) {
-		if (Map_Hit(int(enemy[j][2].x - map_error), int(enemy[j][2].y)) != 1)
+	//エネミーの重力判定
+	//右下・下・左下の当たり判定
+	for (int j = 0; j < enemy_number; j++) {
+		if (Map_Hit(int(enemy[j][2].x - map_error), int(enemy[j][2].y)) != 1 &&
+			Map_Hit(int(enemy[j][2].x - 64 - map_error), int(enemy[j][2].y)) != 1 &&
+			Map_Hit(int(enemy[j][3].x - map_error), int(enemy[j][3].y)) != 1)
 		{
-			//下の当たり判定
-			if (Map_Hit(int(enemy[j][2].x - 64 - map_error), int(enemy[j][2].y)) != 1)
+			for (int i = 0; i < 4; i++)
 			{
-				//左下の当たり判定
-				if (Map_Hit(int(enemy[j][3].x - map_error), int(enemy[j][3].y)) != 1)
-				{
-
-					for (int i = 0; i < 4; i++)
-					{
-						enemy[j][i].y += GRAVITY;
-					}
-				}
+				enemy[j][i].y += GRAVITY;
 			}
 		}
 	}
@@ -257,53 +176,50 @@ void Gravity(){
 //
 //めり込みバグの修正
 void bug() {
-
-	while (Map_Hit(int(player_chara[3].x + 1 + Sheep.x_speed - map_error), int(player_chara[3].y - 1)) == 1 || Map_Hit(int(player_chara[2].x - 1 - Sheep.x_speed - map_error), int(player_chara[2].y - 1)) == 1 || Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y - 1)) == 1)
+	//プレイヤーのバグ修正
+	while (Map_Hit(int(player_chara[3].x + 1 + Sheep.x_speed - map_error), int(player_chara[3].y - 1)) == 1 ||
+		   Map_Hit(int(player_chara[2].x - 1 - Sheep.x_speed - map_error), int(player_chara[2].y - 1)) == 1 ||
+		   Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y - 1)) == 1)
 	{
-		for (int i = 0; i < 4; i++) {
-			player_chara[i].y -= 0.1f;
-		}
+		for (int i = 0; i < 4; i++) { player_chara[i].y -= 0.1f; }
+		
 	}
 	while (Map_Hit(int(player_chara[3].x + 1 - map_error), int(player_chara[3].y - Sheep.scale)) == 1)
 	{
-		for (int i = 0; i < 4; i++) {
-			player_chara[i].x += 0.1f;
-		}
+		for (int i = 0; i < 4; i++) { player_chara[i].x += 0.1f; }
+		
 	}
 	while (Map_Hit(int(player_chara[2].x - 1 - map_error), int(player_chara[2].y - Sheep.scale)) == 1)
 	{
-		for (int i = 0; i < 4; i++) {
-			player_chara[i].x -= 0.1f;
-		}
+		for (int i = 0; i < 4; i++) { player_chara[i].x -= 0.1f; }
+		
 	}
-	for (int j = 0; j < number; j++)
+	//エネミーのバグ修正
+	for (int j = 0; j < enemy_number; j++)
 	{
-		while (Map_Hit(int(enemy[j][3].x + 1 + 2- map_error), int(enemy[j][3].y -1)) == 1 || Map_Hit(int(enemy[j][2].x - 1 -2 - map_error), int(enemy[j][2].y -1)) == 1)
+		while (Map_Hit(int(enemy[j][3].x + 1 + wolf[j].move_x- map_error), int(enemy[j][3].y -1)) == 1 ||
+			Map_Hit(int(enemy[j][2].x - 1 - wolf[j].move_x - map_error), int(enemy[j][2].y -1)) == 1)
 		{
-			for (int i = 0; i < 4; i++) {
-				enemy[j][i].y -= 0.1f;
-			}
+			for (int i = 0; i < 4; i++) { enemy[j][i].y -= 0.1f; }
 		}
 	}
-
-
-
-
-
 }
 
 void smoketime() {
 	if (smoke == true)
 	{
-	
 		static int smokecount = 0;
 		smokecount++;
-
 		if (smokecount > 60*Sheep.smoketime) {
 			smokecount = 0;
-			smoke = false;
+			smokehensinnow = true;
+			smokereturnnomal = true;
 		}
-	}
+	}	
+}
+
+void Returnnomal() {
+	
 	
 		
 }
@@ -313,7 +229,6 @@ void smoketime() {
 void jump() {
 	static float p_y1[4] = { 0,0,0,0}, p_y2[4] = { 0,0,0,0};
 	
-
 		if (jflag == true) {
 			
 			for (int i = 0; i < 4; i++)
@@ -324,22 +239,24 @@ void jump() {
 
 				p_y2[i] = p_y1[i];
 			}
-			if (Map_Hit(int(player_chara[1].x -1-Sheep.x_speed - map_error), int(player_chara[1].y)) == 1 || Map_Hit(int(player_chara[0].x + 1 + Sheep.x_speed - map_error), int(player_chara[0].y)) == 1 || Map_Hit(int(player_chara[1].x - 64 - map_error), int(player_chara[1].y)) == 1)
+			if (Map_Hit(int(player_chara[1].x -1-Sheep.x_speed - map_error), int(player_chara[1].y)) == 1 ||
+				Map_Hit(int(player_chara[0].x + 1 + Sheep.x_speed - map_error), int(player_chara[0].y)) == 1 ||
+				Map_Hit(int(player_chara[1].x - 64 - map_error), int(player_chara[1].y)) == 1)
 			{
 				for (int i = 0; i < 4; i++)
 				{
 					player_chara[i].y += 18;
 				}
 			}
-			if (Map_Hit(int(player_chara[2].x - 1 - Sheep.x_speed -map_error), int(player_chara[2].y))==1||  Map_Hit(int(player_chara[3].x + 1 + Sheep.x_speed -map_error), int(player_chara[3].y)) == 1|| Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y)) == 1)
+			if (Map_Hit(int(player_chara[2].x - 1 - Sheep.x_speed -map_error), int(player_chara[2].y))==1||
+				Map_Hit(int(player_chara[3].x + 1 + Sheep.x_speed -map_error), int(player_chara[3].y)) == 1||
+				Map_Hit(int(player_chara[2].x - 64 - map_error), int(player_chara[2].y)) == 1)
 			
 			{
 					jflag = false;
-				
-				
 			}
 		}
-		if( key_space==true&& jflag == false) {
+		if( isJump==true&& jflag == false) {
 			jflag = true;
 
 			for (int i = 0; i < 4; i++)
@@ -350,141 +267,7 @@ void jump() {
 		}
 }
 
-void MainControl()
-{
-	if (smokeUPmove == true)
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			player_chara[i].y -= 3;
-		}
-	}
-	if (smokeDOWNmove == true)
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			player_chara[i].y += 3;
-		}
-	}
 
-
-
-
-
-	if (isRight == true)
-	{
-		game_time++;
-		if (player_chara[0].tu > player_chara[1].tu)
-		{
-			float tmp_tu;
-
-			tmp_tu = player_chara[0].tu;
-			player_chara[0].tu = player_chara[1].tu;
-			player_chara[1].tu = tmp_tu;
-
-			tmp_tu = player_chara[2].tu;
-			player_chara[2].tu = player_chara[3].tu;
-			player_chara[3].tu = tmp_tu;
-		}
-		//右上と右下のあたり判定
-		if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y-6 )) != 1 && Map_Hit(int(player_chara[1].x - map_error), int(player_chara[1].y)) !=1&& Map_Hit(int(player_chara[1].x - map_error), int(player_chara[1].y+55)) != 1)
-		{
-			if (smoke == false)
-			{
-				if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y - 6)) != 5 && Map_Hit(int(player_chara[5].x - map_error), int(player_chara[5].y)) != 5 && Map_Hit(int(player_chara[5].x - map_error), int(player_chara[5].y + 55)) != 5)
-				{
-
-					for (int i = 0; i < 4; i++)
-					{
-						player_chara[i].x += Sheep.x_speed;//PlayerのSpeed
-
-
-						if (game_time % 4 == 0)
-						{
-							player_chara[i].tu += 0.125f;
-						}
-					}
-				}
-			}
-			else
-			{
-				for (int i = 0; i < 4; i++)
-				{
-					player_chara[i].x += Sheep.x_speed;//PlayerのSpeed
-
-
-					if (game_time % 4 == 0)
-					{
-						player_chara[i].tu += 0.125f;
-					}
-				}
-			}
-
-		}
-		if (player_chara[0].tu == 0.75f)
-		{
-			player_chara[0].tu = 0.0f;
-			player_chara[1].tu = 0.125f;
-			player_chara[2].tu = 0.125f;
-			player_chara[3].tu = 0.0f;
-		}
-	}
-	if (isLeft == true)
-	{
-		game_time++;
-		if (player_chara[0].tu < player_chara[1].tu)
-		{
-			float tmp_tu;
-
-			tmp_tu = player_chara[0].tu;
-			player_chara[0].tu = player_chara[1].tu;
-			player_chara[1].tu = tmp_tu;
-
-			tmp_tu = player_chara[2].tu;
-			player_chara[2].tu = player_chara[3].tu;
-			player_chara[3].tu = tmp_tu;
-		}
-		if (Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y)) != 1 && Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y - 20)) != 1 && Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y + 55)) != 1)
-		{
-			if (smoke == false) {
-				if (Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y)) != 5 && Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y - 20)) != 5 && Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y + 55)) != 5)
-				{
-
-					for (int i = 0; i < 4; i++)
-					{
-						player_chara[i].x -= Sheep.x_speed; //PlayerのSpeed
-
-						if (game_time % 4 == 0)
-						{
-							player_chara[i].tu += 0.125f;
-						}
-					}
-				}
-			}
-			else
-			{
-				for (int i = 0; i < 4; i++)
-				{
-					player_chara[i].x -= Sheep.x_speed; //PlayerのSpeed
-
-					if (game_time % 4 == 0)
-					{
-						player_chara[i].tu += 0.125f;
-					}
-				}
-			}
-		
-			
-		}
-		if (player_chara[1].tu == 0.75f)
-		{
-			player_chara[0].tu = 0.125f;
-			player_chara[1].tu = 0.0f;
-			player_chara[2].tu = 0.0f;
-			player_chara[3].tu = 0.125f;
-		}
-	}
-}
 /**
 *メッセージ処理
 */
@@ -627,7 +410,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	TEX_Init();
 
-
 	//フォントオブジェクトの作成
 	D3DXCreateFont(
 		g_pD3Device,				// Direct3Dデバイス
@@ -659,24 +441,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			SyncNow = timeGetTime();
 			if (SyncNow - SyncOld >= 1000 / 60) //	1秒間に60回この中に入るはず
 			{
-				Render();
+				if (smokehensinnow)
+				{
+					smokehensintime();
+					Returnnomal();
+				}
+				else {
 					MainKeyControl();
-					if (jflag == false) {
-						Gravity();
-					}
+					Gravity();
 					jump();
-				
-				scroll();
+					scroll();
+					
 					MainControl();
 					bug();
-					move();
+					EnemyMove();
 					smoketime();
+				}
+				Render();
 					SyncOld = SyncNow;
 			}
 		}
 	}
 	timeEndPeriod(1);
-
 	FreeDx();
 	return (int)msg.wParam;
 }
