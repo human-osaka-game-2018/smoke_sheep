@@ -1,7 +1,7 @@
 #include"render.h"
 #include"enemy.h"
 #include"Player.h"
-#include"map.h"
+#include"Map.h"
 
 void Tex_Load(const char* name, LPDIRECT3DTEXTURE9* pTexture, IDirect3DDevice9* pD3Device)
 {
@@ -41,14 +41,14 @@ void Render()
 		D3DCOLOR_XRGB(0x00, 0x00, 0x00),
 		1.0, 0);
 	//描画の開始
+g_pD3Device->BeginScene();
 
 	Tex_Set_Draw(g_pD3Device, g_pTexture[BACKGROUND_TEX], background);
 
-	g_pD3Device->BeginScene();
-
-	mapRender();
 	PlayerRender();
-	for (int i = 0; i < enemy_number; i++)
+	mapRender();
+
+	for (int i = 0; i < Enemy_Number; i++)
 	{
 		Tex_Set_Draw(g_pD3Device, g_pTexture[ENEMY_TEX], enemy[i]);
 	}
@@ -66,14 +66,14 @@ void mapRender()
 	if (CsvReading == true)
 	{
 		FILE*  fp;
-		fopen_s(&fp, "map.csv", "r");
+		fopen_s(&fp, "Map.csv", "r");
 		
 
 		for (int i = 0; i < MAP_HEIGHT; i++)
 		{
 			for (int j = 0; j < MAP_WIDTH; j++)
 			{
-				fscanf_s(fp, "%d,", &map[i][j], _countof(map));
+				fscanf_s(fp, "%d,", &Map[i][j], _countof(Map));
 			}
 		}
 	}
@@ -96,76 +96,76 @@ void mapRender()
 				tmp_map1[i].x += (x * 64);
 				tmp_map1[i].y += (y * 64);
 			}
-			if (map[y][x] == 1)
-			{
-				Tex_Set_Draw(g_pD3Device, g_pTexture[M_01_01_TEX], tmp_map1);
-			}
 
-			if (map[y][x] == 3)
-			{
-				Tex_Set_Draw(g_pD3Device, g_pTexture[Wataame_TEX], tmp_map1);
-			}
-			if (map[y][x] == 5)
-			{
-				Tex_Set_Draw(g_pD3Device, g_pTexture[iveblock_TEX], tmp_map1);
-			}
+			///////////////////////////////////////////////////////////
+
+			if (Map[y][x] == 1)Tex_Set_Draw(g_pD3Device, g_pTexture[M_01_01_TEX], tmp_map1);
+			//if (Map[y][x] == 2);//
+			//if (Map[y][x] == 3);//
+			//if (Map[y][x] == 4);//
+			//if (Map[y][x] == 5);//
+			if (Map[y][x] == 6)Tex_Set_Draw(g_pD3Device, g_pTexture[M_01_01_TEX], tmp_map1);
+			if (Map[y][x] == 7)Tex_Set_Draw(g_pD3Device, g_pTexture[iveblock_TEX], tmp_map1);
+			if (Map[y][x] == 8)Tex_Set_Draw(g_pD3Device, g_pTexture[iveblock_TEX], tmp_map1);
+
+			if (Map[y][x] == 53)Tex_Set_Draw(g_pD3Device, g_pTexture[iveblock_TEX], tmp_map1);
 			if (CsvReading)
 			{
-				if (map[y][x] == 21)
+				if (Map[y][x] == 21)
 				{
-					if (enemy_number < 100)
+					if (Enemy_Number < 100)
 					{
 						for (int i = 0; i < 4; i++)
 						{
-							enemy[enemy_number][i] = tmp_map1[i];
+							enemy[Enemy_Number][i] = tmp_map1[i];
 						}
 				
-						EnemyInit(map[y][x], enemy_number);
-						 SettingEnemy_tutv(wolf[enemy_number].type);
-						enemy_number++;
+						EnemyInit(Map[y][x], Enemy_Number);
+						 SettingEnemy_tutv(wolf[Enemy_Number].type);
+						Enemy_Number++;
 					}
 				}
 
-				if (map[y][x] == 22)
+				if (Map[y][x] == 22)
 				{
-					if (enemy_number < 100)
+					if (Enemy_Number < 100)
 					{
 						for (int i = 0; i < 4; i++)
 						{
-							enemy[enemy_number][i] = tmp_map1[i];
+							enemy[Enemy_Number][i] = tmp_map1[i];
 						}
-						EnemyInit(map[y][x], enemy_number);
+						EnemyInit(Map[y][x], Enemy_Number);
 					
-						SettingEnemy_tutv(wolf[enemy_number].type);
-						enemy_number++;
+						SettingEnemy_tutv(wolf[Enemy_Number].type);
+						Enemy_Number++;
 					}
 				}
-				if (map[y][x] == 23)
+				if (Map[y][x] == 23)
 				{
-					if (enemy_number < 100)
+					if (Enemy_Number < 100)
 					{
 						for (int i = 0; i < 4; i++)
 						{
-							enemy[enemy_number][i] = tmp_map1[i];
+							enemy[Enemy_Number][i] = tmp_map1[i];
 						}
-						EnemyInit(map[y][x], enemy_number);
+						EnemyInit(Map[y][x], Enemy_Number);
 
-						SettingEnemy_tutv(wolf[enemy_number].type);
-						enemy_number++;
+						SettingEnemy_tutv(wolf[Enemy_Number].type);
+						Enemy_Number++;
 					}
 				}
-				if (map[y][x] == 24)
+				if (Map[y][x] == 24)
 				{
-					if (enemy_number < 100)
+					if (Enemy_Number < 100)
 					{
 						for (int i = 0; i < 4; i++)
 						{
-							enemy[enemy_number][i] = tmp_map1[i];
+							enemy[Enemy_Number][i] = tmp_map1[i];
 						}
-						EnemyInit(map[y][x], enemy_number);
+						EnemyInit(Map[y][x], Enemy_Number);
 						
-						SettingEnemy_tutv(wolf[enemy_number].type);
-						enemy_number++;
+						SettingEnemy_tutv(wolf[Enemy_Number].type);
+						Enemy_Number++;
 					}
 				}
 
@@ -210,7 +210,7 @@ void TEX_Init()
 	Tex_Load("text/ive_block.png", &g_pTexture[iveblock_TEX], g_pD3Device);
 	Tex_Load("text/SmokeS_Smoke.png", &g_pTexture[Smoke_Smoke_TEX], g_pD3Device);
 	Tex_Load("text/background.png", &g_pTexture[BACKGROUND_TEX], g_pD3Device);
-	Tex_Load("text/enemy.png", &g_pTexture[ENEMY_TEX], g_pD3Device);
+	Tex_Load("text/enemy1.png", &g_pTexture[ENEMY_TEX], g_pD3Device);
 
 
 	//画像読み込みのストック

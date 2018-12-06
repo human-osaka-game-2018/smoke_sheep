@@ -15,9 +15,13 @@ struct enemy_wolf {
 };
 extern enemy_wolf wolf[100];
 extern CUSTOMVERTEX enemy[100][4];
-void EnemyInit(int type, int enemy_number);
+
+
+
+void EnemyInit(int type, int Enemy_Number);
 void Enemy_LRrevFlag();
-void EnemyMove();
+void EnemyMainControl();
+void EnemyMove(CUSTOMVERTEX *a, enemy_wolf *b, bool RIGHTorLEFT,unsigned int E_game_time);
 float Enemy_tu(enemytype a);
 float Enemy_tv(enemytype a);
 float EnemyWidth_tu();

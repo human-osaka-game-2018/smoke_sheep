@@ -1,5 +1,5 @@
 #include"player.h"
-#include"map.h"
+#include"Map.h"
 
 
 g_player Sheep =
@@ -91,9 +91,77 @@ void SettingPlayer_tutv(playerpicture_tu a ,playerpicture_tv b) {
 	}
 }
 
+
+void DrawTurn(CUSTOMVERTEX *a) {
+	float tmp_tu;
+
+	tmp_tu = a[0].tu;
+	a[0].tu = a[1].tu;
+	a[1].tu = tmp_tu;
+
+	tmp_tu = a[2].tu;
+	a[2].tu = a[3].tu;
+	a[3].tu = tmp_tu;
+}
+
+bool  Left_Hit(CUSTOMVERTEX *a, int MapNumber,bool ANDorOR ,int x_adjust )
+{
+	if (ANDorOR == AND)
+	{
+		if (Map_Hit(int(a[0].x + x_adjust - Map_Error), int(a[0].y)) != MapNumber
+			&& Map_Hit(int(a[3].x + x_adjust - Map_Error), int(a[3].y - GRAVITY)) != MapNumber
+			&& Map_Hit(int(a[0].x + x_adjust - Map_Error), int(a[0].y + Sheep.scale)) != MapNumber)
+		{
+			return true;
+		}
+		return false;
+	}
+	if (ANDorOR == OR)
+	{
+		if (Map_Hit(int(a[0].x + x_adjust - Map_Error), int(a[0].y)) != MapNumber
+			|| Map_Hit(int(a[3].x + x_adjust - Map_Error), int(a[3].y - GRAVITY)) != MapNumber
+			|| Map_Hit(int(a[0].x + x_adjust - Map_Error), int(a[0].y + Sheep.scale)) != MapNumber)
+		{
+			return true;
+		}
+		return false;
+	}
+}
+
+
+
+bool  Right_Hit(CUSTOMVERTEX *a, int MapNumber,bool ANDorOR, int x_adjust )
+{
+	if (ANDorOR == AND)
+	{
+		if (Map_Hit(int(a[1].x - x_adjust - Map_Error),int (a[1].y)) != MapNumber
+			&& Map_Hit(int(a[2].x - x_adjust - Map_Error), int(a[2].y - GRAVITY)) != MapNumber
+			&& Map_Hit(int(a[1].x - x_adjust - Map_Error), int(a[1].y + Sheep.scale)) != MapNumber)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	if (ANDorOR == OR)
+	{
+		if (Map_Hit(int(a[1].x - x_adjust - Map_Error), int(a[1].y)) != MapNumber
+			|| Map_Hit(int(a[2].x - x_adjust - Map_Error), int(a[2].y - GRAVITY)) != MapNumber
+			|| Map_Hit(int(a[1].x - x_adjust - Map_Error), int(a[1].y + Sheep.scale)) != MapNumber)
+		{
+			return true;
+		}
+		return false;
+	}
+}
+
+
+
+
+
 void PlayerUp()
 {
-	if (smoke) {
+	if (Smoke) {
 		for (int i = 0; i < 4; i++)
 		{
 			player_chara[i].y -= Sheep.y_speed;
@@ -102,7 +170,7 @@ void PlayerUp()
 }
 
 void PlayerDown() {
-	if (smoke) {
+	if (Smoke) {
 		for (int i = 0; i < 4; i++)
 		{
 			player_chara[i].y += Sheep.y_speed;
@@ -116,27 +184,15 @@ void PlayerRight() {
 		//âÊëúÇÃç∂âEîΩì]
 		if (player_chara[0].tu > player_chara[1].tu)
 		{
-			float tmp_tu;
-
-			tmp_tu = player_chara[0].tu;
-			player_chara[0].tu = player_chara[1].tu;
-			player_chara[1].tu = tmp_tu;
-
-			tmp_tu = player_chara[2].tu;
-			player_chara[2].tu = player_chara[3].tu;
-			player_chara[3].tu = tmp_tu;
+			DrawTurn(player_chara);
 		}
 		//âEè„Ç∆âEâ∫ÇÃÇ†ÇΩÇËîªíË
-		if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y - 6)) != 1 &&
-			Map_Hit(int(player_chara[1].x - map_error), int(player_chara[1].y)) != 1 &&
-			Map_Hit(int(player_chara[1].x - map_error), int(player_chara[1].y + 55)) != 1) {
+		if (Right_Hit(player_chara, 1,AND) == true) {
 
-			if (smoke == false)
+			if (Smoke == false)
 			{
 				SettingPlayer_tutv(tu_walk,tv_walk);
-				if (Map_Hit(int(player_chara[2].x - map_error), int(player_chara[2].y - 6)) != 5 &&
-					Map_Hit(int(player_chara[5].x - map_error), int(player_chara[5].y)) != 5
-					&& Map_Hit(int(player_chara[5].x - map_error), int(player_chara[5].y + 55)) != 5)
+				if (Right_Hit(player_chara, 7,AND) == true)
 				{
 					for (int i = 0; i < 4; i++)
 					{
@@ -152,14 +208,14 @@ void PlayerRight() {
 					SettingPlayer_tu(tu_walk);
 				}
 			}
-			else if(smoke==true)
+			else if(Smoke==true)
 			{
 				SettingPlayer_tutv(tu_smokewalk,tv_smokewalk);
 				for (int i = 0; i < 4; i++)
 				{
 					player_chara[i].x += Sheep.x_speed;
 					if (P_game_time % 4 == 0)
-					{
+					{	
 						player_chara[i].tu += Player_tu(tu_smokewalk);
 					}
 				}
@@ -170,33 +226,19 @@ void PlayerRight() {
 			}
 		}
 }
-
-
 void PlayerLeft() {
 
 	static unsigned int P_game_time;
 		P_game_time++;
 		if (player_chara[0].tu < player_chara[1].tu)
 		{
-			float tmp_tu;
-
-			tmp_tu = player_chara[0].tu;
-			player_chara[0].tu = player_chara[1].tu;
-			player_chara[1].tu = tmp_tu;
-
-			tmp_tu = player_chara[2].tu;
-			player_chara[2].tu = player_chara[3].tu;
-			player_chara[3].tu = tmp_tu;
+			DrawTurn(player_chara);
 		}
-		if (Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y)) != 1
-			&& Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y - 20)) != 1
-			&& Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y + 55)) != 1)
+		if (Left_Hit(player_chara, 1,AND)==true)
 		{
-			if (smoke == false) {
+			if (Smoke == false) {
 				SettingPlayer_tutv(tu_walk,tv_walk);
-				if (Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y)) != 5
-					&& Map_Hit(int(player_chara[3].x - map_error), int(player_chara[3].y - 20)) != 5
-					&& Map_Hit(int(player_chara[0].x - map_error), int(player_chara[0].y + 55)) != 5)
+				if(Left_Hit(player_chara, 7,AND)==true)
 				{
 					for (int i = 0; i < 4; i++)
 					{
@@ -210,13 +252,12 @@ void PlayerLeft() {
 				}
 				if (player_chara[1].tu == Player_tu(tu_walk)*3)
 				{
-					player_chara[0].tu = Player_tu(tu_walk);
-					player_chara[1].tu = 0.0f;
-					player_chara[2].tu = 0.0f;
-					player_chara[3].tu = Player_tu(tu_walk);
+				
+					SettingPlayer_tu(tu_walk);
+					DrawTurn(player_chara);
 				}
 			}
-			else if(smoke==true)
+			else if(Smoke==true)
 			{
 				SettingPlayer_tutv(tu_smokewalk,tv_smokewalk);
 				for (int i = 0; i < 4; i++)
@@ -231,10 +272,8 @@ void PlayerLeft() {
 			}
 			if (player_chara[1].tu == Player_tu(tu_smokewalk)*3)
 			{
-				player_chara[0].tu = Player_tu(tu_smokewalk);
-				player_chara[1].tu = 0.0f;
-				player_chara[2].tu = 0.0f;
-				player_chara[3].tu = Player_tu(tu_smokewalk);
+				SettingPlayer_tu(tu_smokewalk);
+				DrawTurn(player_chara);
 			}
 		}
 }
@@ -242,7 +281,7 @@ void PlayerLeft() {
 void smokehensintime()
 {
 	
-	if (smokehensinnow&&!smokereturnnomal)
+	if (SmokeTransNow&&!SmokeReturnNomal)
 	{
 		if (player_chara[1].tv != Player_tv(tv_hensin))
 		{
@@ -260,11 +299,11 @@ void smokehensintime()
 		}
 		if (player_chara[0].tu == Player_tu(tu_hensin) * 4)
 		{
-			smoke = true;
-			smokehensinnow = false;
+			Smoke = true;
+			SmokeTransNow = false;
 		}
 	}
-	if (smokehensinnow&&smokereturnnomal)
+	if (SmokeTransNow&&SmokeReturnNomal)
 	{
 		static int count;
 		count++;
@@ -277,6 +316,7 @@ void smokehensintime()
 			player_chara[2].tu = Player_tu(tu_hensin) * 4;
 			player_chara[3].tu = Player_tu(tu_hensin) * 3;
 		}
+
 		for (int i = 0; i < 4; i++)
 		{
 			if (count % 10 == 0)
@@ -284,11 +324,10 @@ void smokehensintime()
 				player_chara[i].tu -= Player_tu(tu_hensin);
 			}
 		}
-
 		if (player_chara[1].tu == Player_tu(tu_hensin) * 0) {
-			smokereturnnomal = false;
-			smokehensinnow = false;
-			smoke = false;
+			SmokeReturnNomal = false;
+			SmokeTransNow = false;
+			Smoke = false;
 			SettingPlayer_tutv(tu_walk, tv_walk);
 
 		}

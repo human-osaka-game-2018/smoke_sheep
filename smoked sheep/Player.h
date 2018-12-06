@@ -40,6 +40,7 @@ enum playerpicture_tu//‰¼
 extern g_player Sheep;
 extern CUSTOMVERTEX player_chara[4];
 
+void DrawTurn(CUSTOMVERTEX *a);
 
 void PlayerUp();
 void PlayerDown();
@@ -52,3 +53,4 @@ void SettingPlayer_tu(playerpicture_tu a);
 void SettingPlayer_tv(playerpicture_tv a);
 void SettingPlayer_tutv(playerpicture_tu a, playerpicture_tv b);
 void smokehensintime();
+

@@ -1,4 +1,4 @@
-#include"map.h"
+#include"Map.h"
 
 int Map_Hit(int x, int y)
 {
@@ -8,22 +8,35 @@ int Map_Hit(int x, int y)
 	{
 		map_y = 0;
 	}
-	if (map[map_y][map_x] == 1)
+	if (Map[map_y][map_x] == 1)
 	{
 		return 1;
 	}
-	if (map[map_y][map_x] == 2)
+	if (Map[map_y][map_x] == 6)
+	{
+		return 1;
+	}
+	if (Map[map_y][map_x] == 2)
 	{
 		return 2;
 	}
-	if (map[map_y][map_x] == 3)
+	if (Map[map_y][map_x] == 3)
 	{
 		return 3;
 	}
-	if (map[map_y][map_x] == 5)
+	if (Map[map_y][map_x] == 7)
 	{
-		return 5;
+		return 7;
 	}
+	if(Map[map_y][map_x] == 8)
+	{
+		return 8;
+	}
+	if (Map[map_y][map_x] == 53)
+	{
+		return 53;
+	}
+
 	return 0;
 }
 

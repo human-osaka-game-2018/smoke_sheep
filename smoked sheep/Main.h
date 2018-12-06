@@ -1,8 +1,12 @@
 #pragma once
 
 #define MAP_HEIGHT 12
-#define MAP_WIDTH 130
+#define MAP_WIDTH 300
 #define GRAVITY 5
+#define AND true
+#define OR false
+#define RIGHT true
+#define LEFT false
 
 #include <windows.h>
 #include <mmsystem.h>
@@ -36,7 +40,6 @@ aaa,
 };
 enum TEXTURE
 {
-
 	M_01_01_TEX,
 	C_01_01_TEX,
 	Fire_TEX,
@@ -46,7 +49,6 @@ enum TEXTURE
 	BACKGROUND_TEX,
 	ENEMY_TEX,
 	TEXMAX,
-
 };
 extern CUSTOMVERTEX background[4];
 extern LPDIRECT3DTEXTURE9	  g_pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
@@ -59,15 +61,20 @@ extern LPDIRECTINPUTDEVICE8 pKeyDevice;
 extern HRESULT InitD3d(HWND);
 extern HRESULT InitDinput(HWND);
 extern LPD3DXFONT MainFont;
-extern int map_error ;
-extern int enemy_number;
-extern int map[MAP_HEIGHT][MAP_WIDTH];
+
+
+
+extern int Map_Error ;
+extern int Enemy_Number;
+extern int Map[MAP_HEIGHT][MAP_WIDTH];
 extern bool isjump;
 extern bool jflag ;
-extern bool smokehensinnow;
-extern bool smoke;
+extern bool SmokeTransNow;
+extern bool Smoke;
 extern bool a[100];
-extern bool smokereturnnomal;
+extern bool SmokeReturnNomal;
+bool  Right_Hit(CUSTOMVERTEX *a, int b, bool ANDorOR ,int x_adjust=0 );
+bool  Left_Hit(CUSTOMVERTEX *a, int b, bool ANDorOR,int x_adjust =0);
 void Render();
 void mapRender();
 void MainKeyControl();
