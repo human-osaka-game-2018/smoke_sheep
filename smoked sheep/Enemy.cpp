@@ -1,9 +1,8 @@
 #include"Enemy.h"
 #include"player.h"
 #include"Map.h"
+#include"Hit.h"
 
-
-//エネミー画像の比率が200×287
 
 CUSTOMVERTEX enemy[100][4] =
 {
@@ -18,13 +17,13 @@ float Enemy_tu(enemytype a) {
 	switch (a)
 	{
 	case nomal:
-		return 0.f / 2048.f;
+		return 0.f / IMAGESIZE2;
 	case speed:
-		return 800.f / 2048.f;
+		return 800.f / IMAGESIZE2;
 	case strong:
-		return 0.f / 2048.f;
+		return 0.f / IMAGESIZE2;
 	case hide:
-		return 0.f / 2048.f;
+		return 0.f / IMAGESIZE2;
 	}
 }
 
@@ -32,13 +31,13 @@ float Enemy_tu_ex(enemytype a) {
 	switch (a)
 	{
 	case nomal:
-		return 0.f / 2048.f;
+		return 0.f / IMAGESIZE2;
 	case speed:
-		return 800.f / 2048.f;
+		return 800.f / IMAGESIZE2;
 	case strong:
-		return 0.f / 2048.f;
+		return 0.f / IMAGESIZE2;
 	case hide:
-		return 800.f / 2048.f;
+		return 800.f / IMAGESIZE2;
 	}
 }
 
@@ -46,9 +45,9 @@ float Enemy_tv(enemytype a) {//2回目以降のループの初期座標
 	switch (a)
 	{
 	case nomal:
-		return 0.f / 2048.f;
+		return 0.f / IMAGESIZE2;
 	case speed:
-		return 0.f / 2048.f;
+		return 0.f / IMAGESIZE2;
 	case strong:
 		return EnemyHeight_tv();
 	case hide:
@@ -57,27 +56,27 @@ float Enemy_tv(enemytype a) {//2回目以降のループの初期座標
 }
 
 float EnemyWidth_tu() {
-	return 200.f / 2048.f;
+	return 200.f / IMAGESIZE2;
 }
 float EnemyHeight_tv() {
 
-	return 145.f / 2048.f;
+	return 145.f / IMAGESIZE2;
 }
 void FormatEnemy_tu()
 {
-	enemy[Enemy_Number][0].tu = 0.f / 2048.f;
+	enemy[Enemy_Number][0].tu = 0.f / IMAGESIZE2;
 	enemy[Enemy_Number][1].tu = EnemyWidth_tu();
 	enemy[Enemy_Number][2].tu = EnemyWidth_tu();
-	enemy[Enemy_Number][3].tu = 0.f / 2048.f;
+	enemy[Enemy_Number][3].tu = 0.f / IMAGESIZE2;
 }
 void FormatEnemy_tv() {
-	enemy[Enemy_Number][0].tv = 0.f / 2048.f;
-	enemy[Enemy_Number][1].tv = 0.f / 2048.f;
+	enemy[Enemy_Number][0].tv = 0.f / IMAGESIZE2;
+	enemy[Enemy_Number][1].tv = 0.f / IMAGESIZE2;
 	enemy[Enemy_Number][2].tv = EnemyHeight_tv();
 	enemy[Enemy_Number][3].tv =  EnemyHeight_tv();
 }
 
-void SettingEnemy_tv(enemytype a)
+void SetEnemy_tv(enemytype a)
 {
 	FormatEnemy_tv();
 	for (int i = 0; i < 4; i++)
@@ -86,7 +85,7 @@ void SettingEnemy_tv(enemytype a)
 	}
 }
 
-void SettingEnemy_tu(enemytype a) {
+void SetEnemy_tu(enemytype a) {
 	FormatEnemy_tu();
 	for (int i = 0; i < 4; i++)
 	{
@@ -97,12 +96,12 @@ void SettingEnemy_tu(enemytype a) {
 void SettingEnemy_tutv(enemytype a)
 {
 	
-		SettingEnemy_tv(a);
-		SettingEnemy_tu(a);
+		SetEnemy_tv(a);
+		SetEnemy_tu(a);
 	
 }
-void EnemyInit(int type,int Enemy_Number) {
-	switch(type)
+void InitEnemy(int mapnumber,int Enemy_Number) {
+	switch(mapnumber)
 	{
 	case 21:
 		wolf[Enemy_Number] = {nomal,1,2.f,2.f ,4};
@@ -124,36 +123,36 @@ void EnemyRender()
 }
 
 
-void Enemy_LRrevFlag()
+void Enemy_ReverseFlag()
 {
 	for (int i = 0; i < Enemy_Number; i++)
 	{
-		for (int j = 0; j < 4; j++)
+		if (LRjudg[i] == LEFT)
 		{
-			if (Map_Hit(int (enemy[i][0].x + 2 + wolf[j].move_x * 2 - Map_Error), int(enemy[i][0].y - GRAVITY == 1))||
-				Map_Hit(int(enemy[i][1].x - 1 - wolf[j].move_x * 2- Map_Error), int(enemy[i][1].y - GRAVITY == 1))||
-				Map_Hit(int(enemy[i][2].x - 1 - wolf[j].move_x * 2- Map_Error), int(enemy[i][2].y - GRAVITY == 1 ))||
-				Map_Hit(int(enemy[i][3].x + 1 + wolf[j].move_x * 2 - Map_Error), int(enemy[i][3].y - GRAVITY == 1 )))
+			if (Left_Hit(enemy[i], 0, OR,-1))
 			{
-				a[i] = !a[i];
-				break;
+				LRjudg[i] = !LRjudg[i];
+				
 			}
-			if (Map_Hit(int(enemy[i][j].x - Map_Error), int(enemy[i][j].y - GRAVITY == 7))) {
-				a[i] = !a[i];
-				break;
-			}
+		}
+		else if(LRjudg[i] == RIGHT) {
+			if (Right_Hit(enemy[i], 0, OR,-1))
+			{
+				LRjudg[i] = !LRjudg[i];
+				
 
+			}
 		}
 	}
 }
 
-void EnemyMove(CUSTOMVERTEX *a, enemy_wolf *b, bool RIGHTorLEFT,unsigned int E_game_time) {
+void EnemyMove(CUSTOMVERTEX *a, enemy_wolf *b, bool RIGHTorLEFT,unsigned int E_FrameTime) {
 	for (int i = 0; i < 4; i++)
 	{
 		if (RIGHTorLEFT == RIGHT)
 		{
 			a[i].x += b->move_x;//enemyのSpeed
-			if (E_game_time % 4 == 0)
+			if (E_FrameTime % 4 == 0)
 			{
 				a[i].tu += EnemyWidth_tu();
 			}
@@ -164,7 +163,7 @@ void EnemyMove(CUSTOMVERTEX *a, enemy_wolf *b, bool RIGHTorLEFT,unsigned int E_g
 		if (RIGHTorLEFT == LEFT)
 		{
 			a[i].x -= b->move_x;//enemyのSpeed
-			if (E_game_time % 4 == 0)
+			if (E_FrameTime % 4 == 0)
 			{
 				a[i].tu += EnemyWidth_tu();
 			}
@@ -177,25 +176,25 @@ void EnemyMove(CUSTOMVERTEX *a, enemy_wolf *b, bool RIGHTorLEFT,unsigned int E_g
 
 
 void EnemyMainControl() {
-	static unsigned int E_game_time;
-	E_game_time++;
-	Enemy_LRrevFlag();
+	static unsigned int E_FrameTime;
+	E_FrameTime++;
+	Enemy_ReverseFlag();//エネミーの左右反転の確認
+
 	for (int j = 0; j < Enemy_Number; j++)
 	{
-		if (a[j]) {
+		if (LRjudg[j]) {
 			if (enemy[j][0].tu < enemy[j][1].tu)
 			{
-
 				DrawTurn(enemy[j]);
 			}
-			EnemyMove(enemy[j], &wolf[j], a[j], E_game_time);
+			EnemyMove(enemy[j], &wolf[j], LRjudg[j], E_FrameTime);
 
 			if (enemy[j][1].tu == (EnemyWidth_tu() * wolf[j].drawnumber))
 			{
 
 				enemy[j][0].tu = EnemyWidth_tu() + Enemy_tu_ex(wolf[j].type);
-				enemy[j][1].tu = (0.f / 2048.f) + Enemy_tu_ex(wolf[j].type);
-				enemy[j][2].tu = (0.f / 2048.f) + Enemy_tu_ex(wolf[j].type);
+				enemy[j][1].tu = (0.f / IMAGESIZE2) + Enemy_tu_ex(wolf[j].type);
+				enemy[j][2].tu = (0.f / IMAGESIZE2) + Enemy_tu_ex(wolf[j].type);
 				enemy[j][3].tu = EnemyWidth_tu() + Enemy_tu_ex(wolf[j].type);
 			}
 			
@@ -206,14 +205,14 @@ void EnemyMainControl() {
 			{
 				DrawTurn(enemy[j]);
 			}
-			EnemyMove(enemy[j], &wolf[j], a[j], E_game_time);
+			EnemyMove(enemy[j], &wolf[j], LRjudg[j], E_FrameTime);
 			
 			if (enemy[j][0].tu == (EnemyWidth_tu() * wolf[j].drawnumber))
 			{
-		        enemy[j][0].tu = (0.f / 2048.f)+Enemy_tu_ex(wolf[j].type);
+		        enemy[j][0].tu = (0.f / IMAGESIZE2)+Enemy_tu_ex(wolf[j].type);
 				enemy[j][1].tu = EnemyWidth_tu()+ Enemy_tu_ex(wolf[j].type);
 				enemy[j][2].tu = EnemyWidth_tu()+ Enemy_tu_ex(wolf[j].type);
-				enemy[j][3].tu = (0.f / 2048.f)+Enemy_tu_ex(wolf[j].type);
+				enemy[j][3].tu = (0.f / IMAGESIZE2)+Enemy_tu_ex(wolf[j].type);
 			}
 			
 		}

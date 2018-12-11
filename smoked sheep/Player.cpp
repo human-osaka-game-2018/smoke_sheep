@@ -1,5 +1,6 @@
 #include"player.h"
 #include"Map.h"
+#include"Hit.h"
 
 
 g_player Sheep =
@@ -17,9 +18,9 @@ g_player Sheep =
 CUSTOMVERTEX player_chara[] =
 {
 	{ Sheep.x - Sheep.scale , Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  0.0f },
-{ Sheep.x + Sheep.scale-30, Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 75.f/1024.f, 0.0f },
-{ Sheep.x + Sheep.scale-30, Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 75.f/1024.f, 124.f/1024.f },
-{ Sheep.x - Sheep.scale,Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  124.f/1024.f },
+{ Sheep.x + Sheep.scale-30, Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 75.f/IMAGESIZE, 0.0f },
+{ Sheep.x + Sheep.scale-30, Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 75.f/IMAGESIZE, 124.f/IMAGESIZE },
+{ Sheep.x - Sheep.scale,Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  124.f/IMAGESIZE },
 };
 
 float Player_tv(playerpicture_tv a) {
@@ -30,13 +31,13 @@ float Player_tv(playerpicture_tv a) {
 		case tv_run:
 			return 0;
 		case tv_smokewait:
-			return 500.f / 1024.f;
+			return 500.f / IMAGESIZE;
 		case tv_smokewalk:
-			return  375.f / 1024.f;
+			return  375.f / IMAGESIZE;
 		case tv_hensin:
-			return 625.f / 1024.f;
+			return 625.f / IMAGESIZE;
 		case tv_atack:
-			return 750.f / 1024.f;
+			return 750.f / IMAGESIZE;
 	}
 
 }
@@ -45,19 +46,19 @@ float Player_tu(playerpicture_tu a) {
 	switch (a)
 	{
 	case tu_walk:
-		return 75.f/1024.f;
+		return 75.f/IMAGESIZE;
 	case tu_run:
-		return 125.f/1024.f;
+		return 125.f/IMAGESIZE;
 	case tu_jump:
-		return 80.f / 1024.f;
+		return 80.f / IMAGESIZE;
 	case tu_smokewait:
-		return 105.f / 1024.f;
+		return 105.f / IMAGESIZE;
 	case tu_smokewalk:
-		return  105.f / 1024.f;
+		return  105.f / IMAGESIZE;
 	case tu_hensin:
-		return 105.f / 1024.f;
+		return 105.f / IMAGESIZE;
 	case tu_atack:
-		return 95.f / 1024.f;
+		return 95.f / IMAGESIZE;
 	}
 }
 void SettingPlayer_tu(playerpicture_tu a) {
@@ -70,8 +71,8 @@ void SettingPlayer_tu(playerpicture_tu a) {
 void PlayerFormat_tv() {
 	player_chara[0].tv = 0;
 	player_chara[1].tv = 0;
-	player_chara[2].tv = 124.f / 1024.f;
-	player_chara[3].tv = 124.f / 1024.f;
+	player_chara[2].tv = 124.f / IMAGESIZE;
+	player_chara[3].tv = 124.f / IMAGESIZE;
 }
 
 
@@ -92,68 +93,8 @@ void SettingPlayer_tutv(playerpicture_tu a ,playerpicture_tv b) {
 }
 
 
-void DrawTurn(CUSTOMVERTEX *a) {
-	float tmp_tu;
-
-	tmp_tu = a[0].tu;
-	a[0].tu = a[1].tu;
-	a[1].tu = tmp_tu;
-
-	tmp_tu = a[2].tu;
-	a[2].tu = a[3].tu;
-	a[3].tu = tmp_tu;
-}
-
-bool  Left_Hit(CUSTOMVERTEX *a, int MapNumber,bool ANDorOR ,int x_adjust )
-{
-	if (ANDorOR == AND)
-	{
-		if (Map_Hit(int(a[0].x + x_adjust - Map_Error), int(a[0].y)) != MapNumber
-			&& Map_Hit(int(a[3].x + x_adjust - Map_Error), int(a[3].y - GRAVITY)) != MapNumber
-			&& Map_Hit(int(a[0].x + x_adjust - Map_Error), int(a[0].y + Sheep.scale)) != MapNumber)
-		{
-			return true;
-		}
-		return false;
-	}
-	if (ANDorOR == OR)
-	{
-		if (Map_Hit(int(a[0].x + x_adjust - Map_Error), int(a[0].y)) != MapNumber
-			|| Map_Hit(int(a[3].x + x_adjust - Map_Error), int(a[3].y - GRAVITY)) != MapNumber
-			|| Map_Hit(int(a[0].x + x_adjust - Map_Error), int(a[0].y + Sheep.scale)) != MapNumber)
-		{
-			return true;
-		}
-		return false;
-	}
-}
 
 
-
-bool  Right_Hit(CUSTOMVERTEX *a, int MapNumber,bool ANDorOR, int x_adjust )
-{
-	if (ANDorOR == AND)
-	{
-		if (Map_Hit(int(a[1].x - x_adjust - Map_Error),int (a[1].y)) != MapNumber
-			&& Map_Hit(int(a[2].x - x_adjust - Map_Error), int(a[2].y - GRAVITY)) != MapNumber
-			&& Map_Hit(int(a[1].x - x_adjust - Map_Error), int(a[1].y + Sheep.scale)) != MapNumber)
-		{
-			return true;
-		}
-		return false;
-	}
-
-	if (ANDorOR == OR)
-	{
-		if (Map_Hit(int(a[1].x - x_adjust - Map_Error), int(a[1].y)) != MapNumber
-			|| Map_Hit(int(a[2].x - x_adjust - Map_Error), int(a[2].y - GRAVITY)) != MapNumber
-			|| Map_Hit(int(a[1].x - x_adjust - Map_Error), int(a[1].y + Sheep.scale)) != MapNumber)
-		{
-			return true;
-		}
-		return false;
-	}
-}
 
 
 

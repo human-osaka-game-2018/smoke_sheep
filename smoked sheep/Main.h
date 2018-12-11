@@ -3,6 +3,8 @@
 #define MAP_HEIGHT 12
 #define MAP_WIDTH 300
 #define GRAVITY 5
+#define IMAGESIZE 1024.f
+#define IMAGESIZE2 2048.f
 #define AND true
 #define OR false
 #define RIGHT true
@@ -64,17 +66,16 @@ extern LPD3DXFONT MainFont;
 
 
 
-extern int Map_Error ;
+extern int Map_scroll ;
 extern int Enemy_Number;
 extern int Map[MAP_HEIGHT][MAP_WIDTH];
 extern bool isjump;
 extern bool jflag ;
 extern bool SmokeTransNow;
 extern bool Smoke;
-extern bool a[100];
+extern bool LRjudg[100];
 extern bool SmokeReturnNomal;
-bool  Right_Hit(CUSTOMVERTEX *a, int b, bool ANDorOR ,int x_adjust=0 );
-bool  Left_Hit(CUSTOMVERTEX *a, int b, bool ANDorOR,int x_adjust =0);
+
 void Render();
 void mapRender();
 void MainKeyControl();

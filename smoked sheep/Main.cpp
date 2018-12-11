@@ -3,7 +3,8 @@
 #include"Map.h"
 #include"Main.h"
 #include"render.h"
-
+#include"main.h"
+#include"Hit.h"
 
 //Directx関係----------------------------
 LPDIRECT3DTEXTURE9	  g_pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列
@@ -26,14 +27,14 @@ CUSTOMVERTEX background[4]
 { 0.f  ,HIGHT,1.f ,1.f, 0xFFFFFFFF,0.f  ,1.f },
 };
 
-int Map_Error = 0;
+int Map_scroll = 0;
 int Enemy_Number = 0;
 int Map[MAP_HEIGHT][MAP_WIDTH];
 bool SmokeTransNow = false;
 bool isJump = false;//ジャンプキーが押されたか否か
 bool jflag = false;//ジャンプ中か否か
 bool Smoke = false;//煙状態か普通状態か
-bool a[100];//仮：エネミーの左右動作情報
+bool LRjudg[100];//仮：エネミーの左右動作情報
 bool SmokeReturnNomal = false;
 
 
@@ -108,7 +109,7 @@ void MainKeyControl()
 
 void scroll() {
 	//スクロール
-	if (player_chara[1].x > 568 /*&& Map_Error > -2880*/)
+	if (player_chara[1].x > 568 /*&& Map_scroll > -2880*/)
 	{
 		for (int i = 0; i < 4; i++)
 		{
@@ -119,9 +120,9 @@ void scroll() {
 				enemy[j][i].x -= Sheep.x_speed;
 			}
 		}
-		Map_Error -= Sheep.x_speed;
+		Map_scroll -= Sheep.x_speed;
 	}
-	else if (player_chara[0].x < 440 && Map_Error < 0)
+	else if (player_chara[0].x < 440 && Map_scroll < 0)
 	{
 		for (int i = 0; i < 4; i++)
 		{
@@ -133,7 +134,7 @@ void scroll() {
 				enemy[j][i].x += Sheep.x_speed;
 			}
 		}
-		Map_Error += Sheep.x_speed;
+		Map_scroll += Sheep.x_speed;
 	}
 }
 
@@ -144,25 +145,20 @@ void Gravity(){
 	//プレイヤーの重力判定
 	if (jflag == false&& Smoke == false) {
 		
-		{
-			//右下・下・左下の当たり判定
-			if (Map_Hit(int(player_chara[2].x- Sheep.x_speed * 2 - Map_Error), int(player_chara[2].y)) != 1 &&
-				Map_Hit(int(player_chara[2].x - Sheep.scale - Map_Error), int(player_chara[2].y)) != 1 &&
-				Map_Hit(int(player_chara[3].x + Sheep.x_speed * 2 - Map_Error), int(player_chara[3].y)) != 1)
+			//下の当たり判定
+			if (Down_Hit(player_chara, 1, AND, Sheep.x_speed * 2,GRAVITY))
 			{
 				for (int i = 0; i < 4; i++)
 				{
 					player_chara[i].y += GRAVITY;
 				}
 			}
-		}
+		
 	}
 	//エネミーの重力判定
 	//右下・下・左下の当たり判定
 	for (int j = 0; j < Enemy_Number; j++) {
-		if (Map_Hit(int(enemy[j][2].x - 1 - wolf[j].move_x * 2 - Map_Error), int(enemy[j][2].y)) == 0 &&
-			//Map_Hit(int(enemy[j][2].x - 64 - Map_Error), int(enemy[j][2].y)) != 1 &&
-			Map_Hit(int(enemy[j][3].x + 1 + wolf[j].move_x * 2 - Map_Error), int(enemy[j][3].y)) == 0)
+		if (Down_Hit(enemy[j], 1, AND, Sheep.x_speed * 2, GRAVITY))
 		{
 			for (int i = 0; i < 4; i++)
 			{
@@ -178,9 +174,7 @@ void Gravity(){
 void bug() {
 
 	//プレイヤーのバグ修正
-	while (Map_Hit(int(player_chara[3].x +  Sheep.x_speed*2 - Map_Error), int(player_chara[3].y - 1)) == 1 ||
-		   Map_Hit(int(player_chara[2].x -Sheep.x_speed*2 - Map_Error), int(player_chara[2].y - 1)) == 1 ||
-		   Map_Hit(int(player_chara[2].x - 64 - Map_Error), int(player_chara[2].y - 1)) == 1)
+	while (!Down_Hit(player_chara, 1,AND,Sheep.x_speed * 2,GRAVITY-1))
 	{
 		for (int i = 0; i < 4; i++) { player_chara[i].y -= 0.1f; }
 	}
@@ -213,8 +207,9 @@ void bug() {
 	//エネミーのバグ修正
 	for (int j = 0; j < Enemy_Number; j++)
 	{
-		while (Map_Hit(int(enemy[j][3].x + 1 + wolf[j].move_x*2- Map_Error), int(enemy[j][3].y -GRAVITY)) == 1 ||
-			Map_Hit(int(enemy[j][2].x - 1 - wolf[j].move_x*2 - Map_Error), int(enemy[j][2].y -GRAVITY)) == 1)
+		while (!Down_Hit(enemy[j], 1, OR, wolf[j].move_x * 2, GRAVITY - 1)
+			/*Map_Hit(int(enemy[j][3].x + 1 + wolf[j].move_x*2- Map_scroll), int(enemy[j][3].y+GRAVITY )) == 1 ||
+			Map_Hit(int(enemy[j][2].x - 1 - wolf[j].move_x*2 - Map_scroll), int(enemy[j][2].y+GRAVITY )) == 1*/)
 		{
 			for (int i = 0; i < 4; i++) { enemy[j][i].y -= 0.1f; }
 		}
@@ -262,22 +257,18 @@ void jump() {
 
 				p_y2[i] = p_y1[i];
 			}
-			if (Map_Hit(int(player_chara[1].x -1-Sheep.x_speed - Map_Error), int(player_chara[1].y)) == 1 ||
-				Map_Hit(int(player_chara[0].x + 1 + Sheep.x_speed - Map_Error), int(player_chara[0].y)) == 1 ||
-				Map_Hit(int(player_chara[1].x - 64 - Map_Error), int(player_chara[1].y)) == 1)
+			if (!Up_Hit(player_chara,1,OR))
 			{
 				for (int i = 0; i < 4; i++)
 				{
 					player_chara[i].y = p_y2[i]+1;
 				}
 			}
-			if (Map_Hit(int(player_chara[2].x - 1 - Sheep.x_speed -Map_Error), int(player_chara[2].y))==1||
-				Map_Hit(int(player_chara[3].x + 1 + Sheep.x_speed -Map_Error), int(player_chara[3].y)) == 1||
-				Map_Hit(int(player_chara[2].x - 64 - Map_Error), int(player_chara[2].y)) == 1)
-			
+			if (!Down_Hit(player_chara, 1, AND, Sheep.x_speed,GRAVITY))
 			{
 					jflag = false;
 			}
+			
 		}
 		if( isJump==true&& jflag == false) {
 			jflag = true;
@@ -482,7 +473,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 					bug();
 					EnemyMainControl();
 					smoketime();
+					
 					Gravity();
+			
 				}
 				Render();
 					SyncOld = SyncNow;

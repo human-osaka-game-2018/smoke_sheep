@@ -26,13 +26,26 @@ void Tex_Set_Draw(IDirect3DDevice9* pD3Device, LPDIRECT3DTEXTURE9 pTexture, CUST
 		Vertex,
 		sizeof(CUSTOMVERTEX));
 }
+
+void DrawTurn(CUSTOMVERTEX *a) {
+	float tmp_tu;
+
+	tmp_tu = a[0].tu;
+	a[0].tu = a[1].tu;
+	a[1].tu = tmp_tu;
+
+	tmp_tu = a[2].tu;
+	a[2].tu = a[3].tu;
+	a[3].tu = tmp_tu;
+}
+
 void Render()
 {
 	//í∏ì_èÓïÒÇì¸ÇÍÇÈ--------------------------------------
 	/* player_chara[0] ={ Sheep.x - Sheep.scale , Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  0.0f };
-	 player_chara[1] = { Sheep.x + Sheep.scale, Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 75.f / 1024.f, 0.0f };
-	 player_chara[2] = { Sheep.x + Sheep.scale, Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 75.f / 1024.f, 124.f / 1024.f };
-	 player_chara[3] = { Sheep.x - Sheep.scale ,Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  124.f / 1024.f };
+	 player_chara[1] = { Sheep.x + Sheep.scale, Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 75.f / IMAGESIZE, 0.0f };
+	 player_chara[2] = { Sheep.x + Sheep.scale, Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 75.f / IMAGESIZE, 124.f / IMAGESIZE };
+	 player_chara[3] = { Sheep.x - Sheep.scale ,Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  124.f / IMAGESIZE };
 */
 	
 	//âÊñ ÇÃè¡ãé
@@ -120,7 +133,7 @@ void mapRender()
 							enemy[Enemy_Number][i] = tmp_map1[i];
 						}
 				
-						EnemyInit(Map[y][x], Enemy_Number);
+						InitEnemy(Map[y][x], Enemy_Number);
 						 SettingEnemy_tutv(wolf[Enemy_Number].type);
 						Enemy_Number++;
 					}
@@ -134,7 +147,7 @@ void mapRender()
 						{
 							enemy[Enemy_Number][i] = tmp_map1[i];
 						}
-						EnemyInit(Map[y][x], Enemy_Number);
+						InitEnemy(Map[y][x], Enemy_Number);
 					
 						SettingEnemy_tutv(wolf[Enemy_Number].type);
 						Enemy_Number++;
@@ -148,7 +161,7 @@ void mapRender()
 						{
 							enemy[Enemy_Number][i] = tmp_map1[i];
 						}
-						EnemyInit(Map[y][x], Enemy_Number);
+						InitEnemy(Map[y][x], Enemy_Number);
 
 						SettingEnemy_tutv(wolf[Enemy_Number].type);
 						Enemy_Number++;
@@ -162,7 +175,7 @@ void mapRender()
 						{
 							enemy[Enemy_Number][i] = tmp_map1[i];
 						}
-						EnemyInit(Map[y][x], Enemy_Number);
+						InitEnemy(Map[y][x], Enemy_Number);
 						
 						SettingEnemy_tutv(wolf[Enemy_Number].type);
 						Enemy_Number++;
