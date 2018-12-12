@@ -1,43 +1,40 @@
 #include"Map.h"
 
+int ReturnNumber(int x, int y, int a)
+{
+	if (Map[y][x] == a)
+	{
+		return a;
+	}
+
+}
 int Map_Hit(int x, int y)
 {
+	
 	int map_x = x / 64;
 	int map_y = y / 64;
 	if (map_y < 0)
 	{
 		map_y = 0;
 	}
-	if (Map[map_y][map_x] == 1)
+	for (int i = 1;i < Noteboard;i++)
 	{
-		return 1;
-	}
-	if (Map[map_y][map_x] == 6)
-	{
-		return 1;
-	}
-	if (Map[map_y][map_x] == 2)
-	{
-		return 2;
-	}
-	if (Map[map_y][map_x] == 3)
-	{
-		return 3;
-	}
-	if (Map[map_y][map_x] == 7)
-	{
-		return 7;
-	}
-	if(Map[map_y][map_x] == 8)
-	{
-		return 8;
-	}
-	if (Map[map_y][map_x] == 53)
-	{
-		return 53;
+		if (i == ReturnNumber(map_x, map_y, i))
+		{
+			return i;
+		}
+		
 	}
 
-	return 0;
+
+
+	/*if (Map[map_y][map_x] == 1)
+	{
+		return 1;
+	}*/
+
+
+	return Empty;
 }
 
 

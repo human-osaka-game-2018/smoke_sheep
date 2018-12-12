@@ -1,6 +1,19 @@
 #pragma once
 
 #include"main.h"
+
+enum isAction
+{
+	wait,
+	walk,
+	jumping,
+	sping,
+	atack,
+	isdamaged,
+	henshin,
+	smokewait,
+	smokewalk,
+};
 struct g_player
 {
 	float x, y, scale;
@@ -8,10 +21,13 @@ struct g_player
 	int	y_speed;
 	int smoketime;
 	int life;
+	isAction state;
+
 	/*float CutTex_x, CutTex_y;*/
 };
 enum playerpicture_tv//‰¼
 {
+	tv_wait,
 	tv_walk,
 	tv_run,
 	tv_jump,
@@ -24,6 +40,7 @@ enum playerpicture_tv//‰¼
 
 enum playerpicture_tu//‰¼
 {
+	tu_wait,
 	tu_walk,
 	tu_run,
 	tu_jump,
@@ -48,9 +65,9 @@ void PlayerLeft();
 void PlayerRight();
 float Player_tv(playerpicture_tv a);
 float Player_tu(playerpicture_tu a);
-void PlayerFormat_tv();
 void SettingPlayer_tu(playerpicture_tu a);
 void SettingPlayer_tv(playerpicture_tv a);
-void SettingPlayer_tutv(playerpicture_tu a, playerpicture_tv b);
+void SettingPlayer_tutv(playerpicture_tu a, playerpicture_tv b,isAction c);
 void smokehensintime();
+void PlayerWait(int count);
 

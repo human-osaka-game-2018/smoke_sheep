@@ -68,18 +68,28 @@ void MainKeyControl()
 		}
 		else if(Smoke)
 		{
-			SettingPlayer_tutv(tu_smokewait, tv_smokewait);
-			for (int i = 0; i < 4; i++)
+			SettingPlayer_tutv(tu_smokewait, tv_smokewait,smokewait);
+			if (count % 4 == 0)
 			{
+				for (int i = 0; i < 4; i++)
 				{
-					player_chara[i].tu += Player_tu(tu_smokewait);
+					{
+						player_chara[i].tu += CHARA_WIDTH;
+					}
 				}
 			}
-			if (player_chara[0].tu == Player_tu(tu_smokewait) * 2)
+			if (player_chara[0].tu == (Player_tu(tu_smokewait) +CHARA_WIDTH*6))
 			{
 				SettingPlayer_tu(tu_smokewait);
 			}
 		}
+		else if (!Smoke)
+		{
+			PlayerWait(count);
+			
+		}
+		
+		
 		if (diks[DIK_S] & 0x80)
 		{
 			PlayerDown();
@@ -146,7 +156,7 @@ void Gravity(){
 	if (jflag == false&& Smoke == false) {
 		
 			//下の当たり判定
-			if (Down_Hit(player_chara, 1, AND, Sheep.x_speed * 2,GRAVITY))
+			if (Down_Hit(player_chara, Soil, AND, Sheep.x_speed * 2,GRAVITY))
 			{
 				for (int i = 0; i < 4; i++)
 				{
@@ -158,7 +168,7 @@ void Gravity(){
 	//エネミーの重力判定
 	//右下・下・左下の当たり判定
 	for (int j = 0; j < Enemy_Number; j++) {
-		if (Down_Hit(enemy[j], 1, AND, Sheep.x_speed * 2, GRAVITY))
+		if (Down_Hit(enemy[j], Soil, AND, Sheep.x_speed * 2, GRAVITY))
 		{
 			for (int i = 0; i < 4; i++)
 			{
@@ -174,30 +184,30 @@ void Gravity(){
 void bug() {
 
 	//プレイヤーのバグ修正
-	while (!Down_Hit(player_chara, 1,AND,Sheep.x_speed * 2,GRAVITY-1))
+	while (!Down_Hit(player_chara, Soil,AND,Sheep.x_speed * 2,GRAVITY-1))
 	{
 		for (int i = 0; i < 4; i++) { player_chara[i].y -= 0.1f; }
 	}
 	if (Smoke)
 	{
-		while (!Left_Hit(player_chara, 1,OR))
+		while (!Left_Hit(player_chara, Soil,OR))
 		{
 			for (int i = 0; i < 4; i++) { player_chara[i].x += 0.1f; }
 		}
-		while (!Right_Hit(player_chara, 1,OR))
+		while (!Right_Hit(player_chara, Soil,OR))
 		{
 			for (int i = 0; i < 4; i++) { player_chara[i].x -= 0.1f; }
 		}
 	}
 	else
 	{
-		while (!Left_Hit(player_chara, 7,OR)||
-			   !Left_Hit(player_chara, 1,OR))
+		while (!Left_Hit(player_chara, Ive,OR)||
+			   !Left_Hit(player_chara, Soil,OR))
 		{
 			for (int i = 0; i < 4; i++) { player_chara[i].x += 0.1f; }
 		}
-		while (!Right_Hit(player_chara, 7,OR)||
-	   		   !Right_Hit(player_chara, 1,OR))
+		while (!Right_Hit(player_chara, Ive,OR)||
+	   		   !Right_Hit(player_chara, Soil,OR))
 		{
 			for (int i = 0; i < 4; i++) { player_chara[i].x -= 0.1f; }
 		}
@@ -207,19 +217,17 @@ void bug() {
 	//エネミーのバグ修正
 	for (int j = 0; j < Enemy_Number; j++)
 	{
-		while (!Down_Hit(enemy[j], 1, OR, wolf[j].move_x * 2, GRAVITY - 1)
-			/*Map_Hit(int(enemy[j][3].x + 1 + wolf[j].move_x*2- Map_scroll), int(enemy[j][3].y+GRAVITY )) == 1 ||
-			Map_Hit(int(enemy[j][2].x - 1 - wolf[j].move_x*2 - Map_scroll), int(enemy[j][2].y+GRAVITY )) == 1*/)
+		while (!Down_Hit(enemy[j], Soil, OR, wolf[j].move_x * 2, GRAVITY - 1))
 		{
 			for (int i = 0; i < 4; i++) { enemy[j][i].y -= 0.1f; }
 		}
-		while (!Left_Hit(enemy[j], 7, OR) ||
-			!Left_Hit(enemy[j], 1, OR))
+		while (!Left_Hit(enemy[j], Ive, OR) ||
+			!Left_Hit(enemy[j], Soil, OR))
 		{
 			for (int i = 0; i < 4; i++) {enemy[j][i].x += 0.1f; }
 		}
-		while (!Right_Hit(enemy[j], 7, OR) ||
-			!Right_Hit(enemy[j], 1, OR))
+		while (!Right_Hit(enemy[j], Ive, OR) ||
+			!Right_Hit(enemy[j], Soil, OR))
 		{
 			for (int i = 0; i < 4; i++) { enemy[j][i].x -= 0.1f; }
 		}
@@ -257,26 +265,64 @@ void jump() {
 
 				p_y2[i] = p_y1[i];
 			}
-			if (!Up_Hit(player_chara,1,OR))
+
+			if (player_chara[0].y < p_y2[0])
+			{
+				if (player_chara[0].tu > player_chara[1].tu) {
+					SettingPlayer_tu(tu_jump);
+					DrawTurn(player_chara);
+				}
+				else {
+					SettingPlayer_tu(tu_jump);
+				}
+
+				for (int i = 0; i < 4; i++)
+				{
+					player_chara[i].tu += CHARA_WIDTH;
+				}
+
+			}
+
+			if (player_chara[0].y > p_y2[0])
+			{
+				if (player_chara[0].tu > player_chara[1].tu) {
+					SettingPlayer_tu(tu_jump);
+					DrawTurn(player_chara);
+				}
+				else {
+					SettingPlayer_tu(tu_jump);
+				}
+			
+				for (int i = 0; i < 4; i++)
+				{
+					player_chara[i].tu += CHARA_WIDTH*2;
+				}
+
+			}
+
+			if (!Up_Hit(player_chara,Soil,OR))
 			{
 				for (int i = 0; i < 4; i++)
 				{
 					player_chara[i].y = p_y2[i]+1;
 				}
 			}
-			if (!Down_Hit(player_chara, 1, AND, Sheep.x_speed,GRAVITY))
+			if (!Down_Hit(player_chara, Soil, AND, Sheep.x_speed,GRAVITY))
 			{
 					jflag = false;
 			}
 			
 		}
-		if( isJump==true&& jflag == false) {
-			jflag = true;
-
-			for (int i = 0; i < 4; i++)
-			{
-				p_y2[i] = player_chara[i].y;
-				player_chara[i].y = player_chara[i].y - 20;
+		if(Down_Hit(player_chara, Empty, OR, Sheep.x_speed, GRAVITY))
+		{ 
+			if (isJump == true && jflag == false) {
+				jflag = true;
+				SettingPlayer_tutv(tu_jump, tv_jump, jumping);
+				for (int i = 0; i < 4; i++)
+				{
+					p_y2[i] = player_chara[i].y;
+					player_chara[i].y = player_chara[i].y - 20;
+				}
 			}
 		}
 }

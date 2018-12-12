@@ -3,12 +3,14 @@
 #define MAP_HEIGHT 12
 #define MAP_WIDTH 300
 #define GRAVITY 5
-#define IMAGESIZE 1024.f
+#define IMAGESIZE 2048.f
 #define IMAGESIZE2 2048.f
 #define AND true
 #define OR false
 #define RIGHT true
 #define LEFT false
+#define CHARA_WIDTH 135.f/2048.f
+#define CHARA_HEIGHT 125.f/2048.f
 
 #include <windows.h>
 #include <mmsystem.h>
@@ -51,6 +53,69 @@ enum TEXTURE
 	BACKGROUND_TEX,
 	ENEMY_TEX,
 	TEXMAX,
+};
+
+
+enum BlockNumber
+{
+	Empty=0,
+	Soil,
+	Grass,
+	NightSoil,
+	NightGrass,
+	Ice,
+	Snow,
+	Ive,
+	Deth,
+	Goal,
+	///////////////エネミー
+	E_nomal=21,
+	E_speed,
+	E_strong,
+	E_hide,
+	E_kids,
+	//////////////アイテム
+	Cottoncandy=41,
+	Fire,
+	Snowcloud,
+	/////////////ギミック
+	Sitch=51,
+	Needle,
+	Icicles,
+	Cloud,
+	Breakflow,
+	Breakflow2,
+	Breakflow3,
+	Wind_strong,
+	Wind_weak,
+	Pinata,
+	/////////看板
+	Signboard1=71,
+	Signboard2,
+	Signboard3,
+	Signboard4,
+	Signboard5,
+	Signboard6,
+	Signboard7,
+	Signboard8,
+	Signboard9,
+	Signboard10,
+	/////////背景オブジェクト
+	Rubbit=201,
+	Squirrel,
+	grandmother,
+	House1,
+	House2,
+	Arrowboard,
+	Noteboard
+
+
+
+
+
+
+
+
 };
 extern CUSTOMVERTEX background[4];
 extern LPDIRECT3DTEXTURE9	  g_pTexture[TEXMAX];	//	画像の情報を入れておく為のポインタ配列

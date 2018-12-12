@@ -129,14 +129,14 @@ void Enemy_ReverseFlag()
 	{
 		if (LRjudg[i] == LEFT)
 		{
-			if (Left_Hit(enemy[i], 0, OR,-1))
+			if (Left_Hit(enemy[i], Empty, OR,-1))
 			{
 				LRjudg[i] = !LRjudg[i];
 				
 			}
 		}
 		else if(LRjudg[i] == RIGHT) {
-			if (Right_Hit(enemy[i], 0, OR,-1))
+			if (Right_Hit(enemy[i], Empty, OR,-1))
 			{
 				LRjudg[i] = !LRjudg[i];
 				

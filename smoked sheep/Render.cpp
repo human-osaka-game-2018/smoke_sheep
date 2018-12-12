@@ -41,13 +41,6 @@ void DrawTurn(CUSTOMVERTEX *a) {
 
 void Render()
 {
-	//’¸“_î•ñ‚ð“ü‚ê‚é--------------------------------------
-	/* player_chara[0] ={ Sheep.x - Sheep.scale , Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  0.0f };
-	 player_chara[1] = { Sheep.x + Sheep.scale, Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 75.f / IMAGESIZE, 0.0f };
-	 player_chara[2] = { Sheep.x + Sheep.scale, Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 75.f / IMAGESIZE, 124.f / IMAGESIZE };
-	 player_chara[3] = { Sheep.x - Sheep.scale ,Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  124.f / IMAGESIZE };
-*/
-	
 	//‰æ–Ê‚ÌÁ‹Ž
 	g_pD3Device->Clear(0, NULL,
 		D3DCLEAR_TARGET,
@@ -120,7 +113,6 @@ void mapRender()
 			if (Map[y][x] == 6)Tex_Set_Draw(g_pD3Device, g_pTexture[M_01_01_TEX], tmp_map1);
 			if (Map[y][x] == 7)Tex_Set_Draw(g_pD3Device, g_pTexture[iveblock_TEX], tmp_map1);
 			if (Map[y][x] == 8)Tex_Set_Draw(g_pD3Device, g_pTexture[iveblock_TEX], tmp_map1);
-
 			if (Map[y][x] == 53)Tex_Set_Draw(g_pD3Device, g_pTexture[iveblock_TEX], tmp_map1);
 			if (CsvReading)
 			{

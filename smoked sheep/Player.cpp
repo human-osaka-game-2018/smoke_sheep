@@ -11,33 +11,37 @@ g_player Sheep =
   5,     // int x_speed;
   3,     //	int	y_speed;
   5,     //	int smoketime;
-  3      //	int life;
+  3,     //	int life;
+  wait    //isAction state;
 };
 
 
 CUSTOMVERTEX player_chara[] =
 {
 	{ Sheep.x - Sheep.scale , Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  0.0f },
-{ Sheep.x + Sheep.scale-30, Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, 75.f/IMAGESIZE, 0.0f },
-{ Sheep.x + Sheep.scale-30, Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 75.f/IMAGESIZE, 124.f/IMAGESIZE },
-{ Sheep.x - Sheep.scale,Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  124.f/IMAGESIZE },
+{ Sheep.x + Sheep.scale-30, Sheep.y - Sheep.scale , 0.5f, 1.0f, 0xFFFFFFFF, CHARA_WIDTH, 0.0f },
+{ Sheep.x + Sheep.scale-30, Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, CHARA_WIDTH, CHARA_HEIGHT },
+{ Sheep.x - Sheep.scale,Sheep.y + Sheep.scale, 0.5f, 1.0f, 0xFFFFFFFF, 0.0f,  CHARA_HEIGHT },
 };
 
 float Player_tv(playerpicture_tv a) {
 	switch (a)
 	{
+	case tv_wait:
+		return 0.f;
 	case tv_walk:
-		return 0;
-		case tv_run:
-			return 0;
-		case tv_smokewait:
-			return 500.f / IMAGESIZE;
-		case tv_smokewalk:
-			return  375.f / IMAGESIZE;
+		return 0.f;
+	case tv_jump:
+		return 0.f;
+	case tv_atack:
+		return CHARA_HEIGHT * 1;
+	case tv_smokewait:
+			return CHARA_HEIGHT*2;
 		case tv_hensin:
-			return 625.f / IMAGESIZE;
-		case tv_atack:
-			return 750.f / IMAGESIZE;
+			return CHARA_HEIGHT*2;
+		case tv_smokewalk:
+			return  CHARA_HEIGHT * 3;
+		
 	}
 
 }
@@ -45,58 +49,44 @@ float Player_tv(playerpicture_tv a) {
 float Player_tu(playerpicture_tu a) {
 	switch (a)
 	{
+	case tu_wait:
+			return 0.f / IMAGESIZE;
 	case tu_walk:
-		return 75.f/IMAGESIZE;
-	case tu_run:
-		return 125.f/IMAGESIZE;
+		return CHARA_WIDTH*4;
 	case tu_jump:
-		return 80.f / IMAGESIZE;
+		return CHARA_WIDTH*10;
 	case tu_smokewait:
-		return 105.f / IMAGESIZE;
+		return CHARA_WIDTH*4;
 	case tu_smokewalk:
-		return  105.f / IMAGESIZE;
+		return  0.f / IMAGESIZE;
 	case tu_hensin:
-		return 105.f / IMAGESIZE;
-	case tu_atack:
-		return 95.f / IMAGESIZE;
+		return 0.f/ IMAGESIZE;
+
 	}
 }
 void SettingPlayer_tu(playerpicture_tu a) {
-	player_chara[0].tu = 0;
-	player_chara[1].tu = Player_tu(a);
-	player_chara[2].tu = Player_tu(a);
-	player_chara[3].tu = 0;
+	player_chara[0].tu = Player_tu(a);
+	player_chara[1].tu = Player_tu(a) + CHARA_WIDTH;
+	player_chara[2].tu = Player_tu(a) + CHARA_WIDTH ;
+	player_chara[3].tu = Player_tu(a);
 }
-
-void PlayerFormat_tv() {
-	player_chara[0].tv = 0;
-	player_chara[1].tv = 0;
-	player_chara[2].tv = 124.f / IMAGESIZE;
-	player_chara[3].tv = 124.f / IMAGESIZE;
-}
-
 
 void SettingPlayer_tv(playerpicture_tv a) {
-		PlayerFormat_tv();//tvの初期化
-		for (int i = 0; i < 4; i++)
-		{
-			player_chara[i].tv += Player_tv(a);
-		}
+	player_chara[0].tv = Player_tv(a);
+	player_chara[1].tv = Player_tv(a);
+	player_chara[2].tv = Player_tv(a)+CHARA_HEIGHT ;
+	player_chara[3].tv = Player_tv(a)+CHARA_HEIGHT ;
 }
 
-void SettingPlayer_tutv(playerpicture_tu a ,playerpicture_tv b) {
-	if (player_chara[0].tv != Player_tv(b))
-	{
+
+void SettingPlayer_tutv(playerpicture_tu a ,playerpicture_tv b,isAction c) {
+	if (Sheep.state != c) {
+		Sheep.state = c;
 		SettingPlayer_tv(b);
 		SettingPlayer_tu(a);
 	}
+	
 }
-
-
-
-
-
-
 
 
 
@@ -127,42 +117,58 @@ void PlayerRight() {
 		{
 			DrawTurn(player_chara);
 		}
-		//右上と右下のあたり判定
-		if (Right_Hit(player_chara, 1,AND) == true) {
 
-			if (Smoke == false)
-			{
-				SettingPlayer_tutv(tu_walk,tv_walk);
-				if (Right_Hit(player_chara, 7,AND) == true)
+
+
+		if (jflag)
+		{
+			if (Right_Hit(player_chara, Soil, AND)) {
+				for (int i = 0; i < 4; i++)
 				{
+					player_chara[i].x += Sheep.x_speed;
+				}
+			}
+
+		}
+		else {
+			//右上と右下のあたり判定
+
+			if (Right_Hit(player_chara, Soil, AND)) {
+
+				if (!Smoke)
+				{
+					SettingPlayer_tutv(tu_walk, tv_walk, walk);
+					if (Right_Hit(player_chara, Ive, AND))
+					{
+						for (int i = 0; i < 4; i++)
+						{
+							player_chara[i].x += Sheep.x_speed;
+							if (P_game_time % 4 == 0)
+							{
+								player_chara[i].tu += CHARA_WIDTH;
+							}
+						}
+					}
+					if (player_chara[0].tu == Player_tu(tu_walk) + CHARA_WIDTH * 6)
+					{
+						SettingPlayer_tu(tu_walk);
+					}
+				}
+				else if (Smoke)
+				{
+					SettingPlayer_tutv(tu_smokewalk, tv_smokewalk, smokewalk);
 					for (int i = 0; i < 4; i++)
 					{
 						player_chara[i].x += Sheep.x_speed;
 						if (P_game_time % 4 == 0)
 						{
-							player_chara[i].tu += Player_tu(tu_walk);
+							player_chara[i].tu += CHARA_WIDTH;
 						}
 					}
-				}
-				if (player_chara[0].tu == Player_tu(tu_walk)*3)
-				{
-					SettingPlayer_tu(tu_walk);
-				}
-			}
-			else if(Smoke==true)
-			{
-				SettingPlayer_tutv(tu_smokewalk,tv_smokewalk);
-				for (int i = 0; i < 4; i++)
-				{
-					player_chara[i].x += Sheep.x_speed;
-					if (P_game_time % 4 == 0)
-					{	
-						player_chara[i].tu += Player_tu(tu_smokewalk);
+					if (player_chara[0].tu == Player_tu(tu_smokewalk) + CHARA_WIDTH * 6)
+					{
+						SettingPlayer_tu(tu_smokewalk);
 					}
-				}
-				if (player_chara[0].tu == Player_tu(tu_smokewalk)*3)
-				{
-					SettingPlayer_tu(tu_smokewalk);
 				}
 			}
 		}
@@ -175,46 +181,58 @@ void PlayerLeft() {
 		{
 			DrawTurn(player_chara);
 		}
-		if (Left_Hit(player_chara, 1,AND)==true)
+		if (jflag)
 		{
-			if (Smoke == false) {
-				SettingPlayer_tutv(tu_walk,tv_walk);
-				if(Left_Hit(player_chara, 7,AND)==true)
+			if (Right_Hit(player_chara, Soil, AND)) {
+				for (int i = 0; i < 4; i++)
 				{
+					player_chara[i].x -= Sheep.x_speed;
+				}
+			}
+
+		}
+		else {
+			if (Left_Hit(player_chara, Soil, AND) == true)
+			{
+				if (Smoke == false) {
+					SettingPlayer_tutv(tu_walk, tv_walk, walk);
+					if (Left_Hit(player_chara, Ive, AND) == true)
+					{
+						for (int i = 0; i < 4; i++)
+						{
+							player_chara[i].x -= Sheep.x_speed; //PlayerのSpeed
+
+							if (P_game_time % 4 == 0)
+							{
+								player_chara[i].tu += CHARA_WIDTH;
+							}
+						}
+					}
+					if (player_chara[1].tu == Player_tu(tu_walk) + CHARA_WIDTH * 6)
+					{
+						SettingPlayer_tu(tu_walk);
+						DrawTurn(player_chara);
+					}
+				}
+				else if (Smoke == true)
+				{
+					SettingPlayer_tutv(tu_smokewalk, tv_smokewalk, smokewalk);
 					for (int i = 0; i < 4; i++)
 					{
 						player_chara[i].x -= Sheep.x_speed; //PlayerのSpeed
 
-						if (P_game_time % 4== 0)
+						if (P_game_time % 4 == 0)
 						{
-							player_chara[i].tu += Player_tu(tu_walk);
+							player_chara[i].tu += CHARA_WIDTH;
 						}
 					}
-				}
-				if (player_chara[1].tu == Player_tu(tu_walk)*3)
-				{
-				
-					SettingPlayer_tu(tu_walk);
-					DrawTurn(player_chara);
-				}
-			}
-			else if(Smoke==true)
-			{
-				SettingPlayer_tutv(tu_smokewalk,tv_smokewalk);
-				for (int i = 0; i < 4; i++)
-				{
-					player_chara[i].x -= Sheep.x_speed; //PlayerのSpeed
 
-					if (P_game_time % 4 == 0)
+					if (player_chara[1].tu == Player_tu(tu_smokewalk) + CHARA_WIDTH * 6)
 					{
-						player_chara[i].tu += Player_tu(tu_smokewalk);
+						SettingPlayer_tu(tu_smokewalk);
+						DrawTurn(player_chara);
 					}
 				}
-			}
-			if (player_chara[1].tu == Player_tu(tu_smokewalk)*3)
-			{
-				SettingPlayer_tu(tu_smokewalk);
-				DrawTurn(player_chara);
 			}
 		}
 }
@@ -224,10 +242,10 @@ void smokehensintime()
 	
 	if (SmokeTransNow&&!SmokeReturnNomal)
 	{
-		if (player_chara[1].tv != Player_tv(tv_hensin))
-		{
-			SettingPlayer_tutv(tu_hensin, tv_hensin);
-		}
+		/*if (player_chara[1].tv != Player_tv(tv_hensin))
+		{*/
+			SettingPlayer_tutv(tu_hensin, tv_hensin,henshin);
+		
 		static int count = 0;
 		count++;
 
@@ -235,10 +253,10 @@ void smokehensintime()
 		{
 			if (count % 10 == 0)
 			{
-				player_chara[i].tu += Player_tu(tu_hensin);
+				player_chara[i].tu += CHARA_WIDTH ;
 			}
 		}
-		if (player_chara[0].tu == Player_tu(tu_hensin) * 4)
+		if (player_chara[0].tu == CHARA_WIDTH * 4)
 		{
 			Smoke = true;
 			SmokeTransNow = false;
@@ -251,31 +269,79 @@ void smokehensintime()
 		
 		if (player_chara[1].tv != Player_tv(tv_hensin))
 		{
-			SettingPlayer_tutv(tu_hensin, tv_hensin);
-			player_chara[0].tu = Player_tu(tu_hensin) * 3;
-			player_chara[1].tu = Player_tu(tu_hensin) * 4;
-			player_chara[2].tu = Player_tu(tu_hensin) * 4;
-			player_chara[3].tu = Player_tu(tu_hensin) * 3;
+			SettingPlayer_tutv(tu_hensin, tv_hensin,henshin);
+			player_chara[0].tu = CHARA_WIDTH * 3;
+			player_chara[1].tu = CHARA_WIDTH * 4;
+			player_chara[2].tu = CHARA_WIDTH * 4;
+			player_chara[3].tu = CHARA_WIDTH * 3;
 		}
 
 		for (int i = 0; i < 4; i++)
 		{
 			if (count % 10 == 0)
 			{
-				player_chara[i].tu -= Player_tu(tu_hensin);
+				player_chara[i].tu -= CHARA_WIDTH;
 			}
 		}
-		if (player_chara[1].tu == Player_tu(tu_hensin) * 0) {
+		if (player_chara[1].tu == CHARA_WIDTH * 0) {
 			SmokeReturnNomal = false;
 			SmokeTransNow = false;
 			Smoke = false;
-			SettingPlayer_tutv(tu_walk, tv_walk);
+			SettingPlayer_tutv(tu_walk, tv_walk,walk);
 
 		}
 	}
 
 
 }
+
+void PlayerWait(int count)
+{
+	if (!jflag) {
+		if (Sheep.state != wait)
+		{
+			if (player_chara[0].tu > player_chara[1].tu)
+			{
+				SettingPlayer_tutv(tu_wait, tv_wait, wait);
+				DrawTurn(player_chara);
+			}
+			else if (player_chara[0].tu < player_chara[1].tu)
+			{
+				SettingPlayer_tutv(tu_wait, tv_wait, wait);
+			}
+
+		}
+		if (count % 4 == 0)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				player_chara[i].tu += CHARA_WIDTH;
+			}
+		}
+		if (player_chara[0].tu > player_chara[1].tu)
+		{
+			if (player_chara[1].tu == CHARA_WIDTH * 4)
+			{
+				SettingPlayer_tu(tu_wait);
+				DrawTurn(player_chara);
+			}
+		}
+		if (player_chara[0].tu < player_chara[1].tu)
+		{
+			if (player_chara[0].tu == CHARA_WIDTH * 4)
+			{
+				SettingPlayer_tu(tu_wait);
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
 void MainControl()
 {
 	
